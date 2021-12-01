@@ -22,3 +22,5 @@ for await (const current of numbers) {
 }
 
 console.log('count', count);
+
+file.close();

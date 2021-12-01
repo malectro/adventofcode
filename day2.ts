@@ -26,6 +26,8 @@ for await (const current of numbers) {
 
 console.log('count', count);
 
+file.close();
+
 function sum(array: Array<number>): number {
   let value = 0;
   for (const number of array) {
