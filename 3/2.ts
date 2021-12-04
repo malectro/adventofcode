@@ -15,10 +15,7 @@ for await (const data of textIter) {
 const length = 12;
 
 const oxygenList = filterNumbers(numbers, (count) => (count >= 0 ? '1' : '0'));
-const co2List = filterNumbers(
-  numbers,
-  (count) => (count < 0 ? '1' : '0')
-);
+const co2List = filterNumbers(numbers, (count) => (count < 0 ? '1' : '0'));
 
 console.log('oxygen', oxygenList);
 console.log('co2', co2List);
@@ -51,15 +48,4 @@ function getCount(numbers: string[], index: number): number {
     }
   }
   return count;
-}
-
-function calcWeirdValue(bits: string[]): number {
-  return Number('0b' + bits.join(''));
-}
-
-function fill<T>(array: Array<T>, value: T, size: number): Array<T> {
-  for (let i = 0; i < size; i++) {
-    array[i] = value;
-  }
-  return array;
 }
