@@ -3,7 +3,10 @@ const source = 'input';
 
 const file = await Deno.readTextFile(new URL(source, import.meta.url));
 
-const fish = file.trim().split(',').map(text => parseInt(text));
+const fish = file
+  .trim()
+  .split(',')
+  .map((text) => parseInt(text));
 
 let queue = fill(9, 0);
 for (const time of fish) {
@@ -26,7 +29,7 @@ function fill<T>(size: number, value: T): T[] {
     result.push(value);
   }
   return result;
-} 
+}
 
 function sum(numbers: number[]): number {
   return numbers.reduce((total, value) => value + total, 0);

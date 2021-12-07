@@ -1,13 +1,13 @@
-import { chunkLines, decodeText, map } from "../iter.ts";
+import {chunkLines, decodeText, map} from '../iter.ts';
 
-const file = await Deno.open(new URL("input", import.meta.url));
+const file = await Deno.open(new URL('input', import.meta.url));
 
 let iter = Deno.iter(file);
 
 let textIter = decodeText(iter);
 textIter = chunkLines(textIter);
 
-const counts = fill([], 0, 12); 
+const counts = fill([], 0, 12);
 for await (const data of textIter) {
   for (let i = 0; i < 12; i++) {
     if (data[i] === '0') {
@@ -18,18 +18,22 @@ for await (const data of textIter) {
   }
 }
 
-let gamma = calcWeirdValue(
-  counts.map(value => value > 0 ? '1' : '0'),
-);
+let gamma = calcWeirdValue(counts.map((value) => (value > 0 ? '1' : '0')));
 
-let epsilon = calcWeirdValue(
-  counts.map(value => value > 0 ? '0' : '1'),
-);
+let epsilon = calcWeirdValue(counts.map((value) => (value > 0 ? '0' : '1')));
 
 console.log('counts', counts);
-console.log('gamma', counts.map(value => value > 0 ? '1' : '0').join(''), gamma),
-console.log('epsilon', counts.map(value => value < 0 ? '1' : '0').join(''), epsilon),
-console.log('final', gamma * epsilon);
+console.log(
+  'gamma',
+  counts.map((value) => (value > 0 ? '1' : '0')).join(''),
+  gamma,
+),
+  console.log(
+    'epsilon',
+    counts.map((value) => (value < 0 ? '1' : '0')).join(''),
+    epsilon,
+  ),
+  console.log('final', gamma * epsilon);
 
 function calcWeirdValue(bits: string[]): number {
   return parseInt(bits.join(''), 2);

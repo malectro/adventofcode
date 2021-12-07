@@ -1,9 +1,4 @@
-import {
-  decodeText,
-  chunkLines,
-  map,
-  rollingWindow,
-} from '../iter.ts';
+import {decodeText, chunkLines, map, rollingWindow} from '../iter.ts';
 
 const file = await Deno.open(new URL('input', import.meta.url));
 

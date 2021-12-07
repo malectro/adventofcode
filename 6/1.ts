@@ -1,6 +1,9 @@
 const file = await Deno.readTextFile(new URL('input', import.meta.url));
 
-const fish = file.trim().split(',').map(text => parseInt(text));
+const fish = file
+  .trim()
+  .split(',')
+  .map((text) => parseInt(text));
 
 for (let i = 0; i < 80; i++) {
   let length = fish.length;

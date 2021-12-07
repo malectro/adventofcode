@@ -15,11 +15,11 @@ for (const [a, b] of lines) {
   let yRange = range(a.y, b.y);
 
   if (xRange.length === 1) {
-    xRange = yRange.map(v => xRange[0]);
+    xRange = yRange.map((v) => xRange[0]);
   }
 
   if (yRange.length === 1) {
-    yRange = xRange.map(v => yRange[0]);
+    yRange = xRange.map((v) => yRange[0]);
   }
 
   for (const [x, y] of zip(xRange, yRange)) {
