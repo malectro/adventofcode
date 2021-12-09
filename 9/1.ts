@@ -1,6 +1,7 @@
 const source = 'input';
 const file = await Deno.readTextFile(new URL(source, import.meta.url));
 
+// basic list of directions to get adjacent cells
 const directions = [
   [0, -1],
   [1, 0],
@@ -18,6 +19,7 @@ const heightmap = file
       .map((text) => parseInt(text)),
   );
 
+// build a list of low points as we assess total risk
 const lowPoints = [];
 
 let totalRisk = 0;
@@ -37,21 +39,19 @@ for (const [y, row] of heightmap.entries()) {
 
 console.log('total risk', totalRisk);
 
+// build a map similar to the heightmap where each cell contains
+// its associated basin id.
 const basinMap = heightmap.map((row) => row.slice().fill(-1));
 
-console.log('heightmap');
-console.log(serializeMap(heightmap));
-
+// for each low point, recursively "paint" its basin using its index
+// in the list of low points. basins with multiple low points will
+// use the id of the first low point in the list.
 let basinSizes = [];
 for (const [index, lowPoint] of lowPoints.entries()) {
-  basinSizes.push(
-    paintBasin(basinMap, index, lowPoint)
-  );
+  basinSizes.push(paintBasin(basinMap, index, lowPoint));
 }
 
-console.log('basinMap\n', serializeMap(basinMap));
-console.log('basins', basinSizes);
-
+// this is not the best way to do this, but it's simpler than insertion.
 let top3: number[] = [];
 for (const size of basinSizes) {
   top3.push(size);
@@ -59,16 +59,20 @@ for (const size of basinSizes) {
   top3 = top3.slice(0, 3);
 }
 
-console.log('top3', top3);
-console.log('final value', top3.reduce((acc, size) => size * acc, 1));
+console.log(
+  'final value',
+  top3.reduce((acc, size) => size * acc, 1),
+);
 
-type Point = {x: number, y: number};
+type Point = {x: number; y: number};
 
-function paintBasin(basinMap: number[][], basinId: number, point: Point): number {
+function paintBasin(
+  basinMap: number[][],
+  basinId: number,
+  point: Point,
+): number {
   const {x, y} = point;
   const currentBasin = basinMap[y]?.[x];
-
-  //console.log('currentBasin', currentBasin, heightmap[y]?.[x]);
 
   if (currentBasin !== -1 || heightmap[y][x] === 9) {
     return 0;
@@ -93,5 +97,7 @@ function addPoint(point1: Point, point2: Point): Point {
 }
 
 function serializeMap(map: number[][]) {
-  return map.map(row => row.map(v => v === -1 ? 'x' : v).join('')).join('\n')
+  return map
+    .map((row) => row.map((v) => (v === -1 ? 'x' : v)).join(''))
+    .join('\n');
 }
