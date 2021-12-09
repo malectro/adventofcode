@@ -52,13 +52,7 @@ for (const [index, lowPoint] of lowPoints.entries()) {
 }
 
 // this is not the best way to do this, but it's simpler than insertion.
-let top3: number[] = [];
-for (const size of basinSizes) {
-  top3.push(size);
-  top3.sort((a, b) => b - a);
-  top3 = top3.slice(0, 3);
-}
-
+const top3 = basinSizes.slice().sort((a, b) => b - a).slice(0, 3);
 console.log(
   'final value',
   top3.reduce((acc, size) => size * acc, 1),
