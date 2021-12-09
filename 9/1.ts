@@ -1,4 +1,4 @@
-const source = 'example';
+const source = 'input';
 const file = await Deno.readTextFile(new URL(source, import.meta.url));
 
 const directions = [
@@ -42,29 +42,47 @@ const basinMap = heightmap.map((row) => row.slice().fill(-1));
 console.log('heightmap');
 console.log(serializeMap(heightmap));
 
+let basinSizes = [];
 for (const [index, lowPoint] of lowPoints.entries()) {
-  paintBasin(basinMap, index, lowPoint);
+  basinSizes.push(
+    paintBasin(basinMap, index, lowPoint)
+  );
 }
 
 console.log('basinMap\n', serializeMap(basinMap));
+console.log('basins', basinSizes);
+
+let top3: number[] = [];
+for (const size of basinSizes) {
+  top3.push(size);
+  top3.sort((a, b) => b - a);
+  top3 = top3.slice(0, 3);
+}
+
+console.log('top3', top3);
+console.log('final value', top3.reduce((acc, size) => size * acc, 1));
 
 type Point = {x: number, y: number};
 
-function paintBasin(basinMap: number[][], basinId: number, point: Point) {
+function paintBasin(basinMap: number[][], basinId: number, point: Point): number {
   const {x, y} = point;
   const currentBasin = basinMap[y]?.[x];
 
   //console.log('currentBasin', currentBasin, heightmap[y]?.[x]);
 
   if (currentBasin !== -1 || heightmap[y][x] === 9) {
-    return;
+    return 0;
   }
+
+  let size = 1;
 
   basinMap[y][x] = basinId;
 
   for (const direction of directions) {
-    paintBasin(basinMap, basinId, addPoint(point, direction));
+    size += paintBasin(basinMap, basinId, addPoint(point, direction));
   }
+
+  return size;
 }
 
 function addPoint(point1: Point, point2: Point): Point {
