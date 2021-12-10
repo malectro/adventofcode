@@ -6,7 +6,7 @@ struct Cli {
     path: std::path::PathBuf,
 }
 
-fn main() -> Result<()> {
+fn main() {
     let open_chars = ['(', '[', '{', '<'];
     let close_chars = [')', ']', '}', '>'];
 
@@ -37,7 +37,7 @@ fn main() -> Result<()> {
     let mut incomplete_scores: Vec<i64> = Vec::new();
 
     for line in reader.lines() {
-        match parse_line(&close_to_open, line?) {
+        match parse_line(&close_to_open, line.expect("failed to read line")) {
             LineResult::BadChar(c) => {
                 error_score += match error_scores.get(&c) {
                     Some(score) => *score,
@@ -64,8 +64,6 @@ fn main() -> Result<()> {
 
     println!("error score {}", error_score);
     println!("final score {}", final_score);
-
-    Ok(())
 }
 
 enum LineResult {
@@ -77,17 +75,15 @@ fn parse_line(close_to_open: &HashMap<char, char>, line: String) -> LineResult {
     let mut scope: Vec<char> = Vec::new();
 
     for c in line.chars() {
-        match close_to_open.get(&c) {
-            None => scope.push(c),
-            Some(open_char) => {
-                match scope.last() {
-                    Some(top) if top == open_char => scope.pop(),
-                    _ => return LineResult::BadChar(c),
-                };
-                ()
-            }
+        if let Some(open_char) = close_to_open.get(&c) {
+            match scope.last() {
+                Some(top) if top == open_char => scope.pop(),
+                _ => return LineResult::BadChar(c),
+            };
+        } else {
+            scope.push(c);
         }
     }
 
-    return LineResult::ExtraChars(scope);
+    LineResult::ExtraChars(scope)
 }
