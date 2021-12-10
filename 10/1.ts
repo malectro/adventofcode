@@ -1,21 +1,10 @@
-const source = 'example';
-const file = await Deno.readTextFile(new URL(source, import.meta.url));
+import {decodeText, chunkLines} from '../iter.ts';
 
-const lines = file.split('\n');
+const stdin = chunkLines(decodeText(Deno.iter(Deno.stdin)));
 
-const openChars = [
-  '(',
-  '[',
-  '{',
-  '<',
-];
+const openChars = ['(', '[', '{', '<'];
 
-const closeChars = [
-  ')',
-  ']',
-  '}',
-  '>',
-];
+const closeChars = [')', ']', '}', '>'];
 
 const scores = new Map([
   [')', 3],
@@ -33,7 +22,7 @@ const closeToOpen = closeChars.reduce((map, char, index) => {
 }, new Map());
 
 let score = 0;
-for (const line of lines) {
+for await (const line of stdin) {
   const scope = [];
 
   for (const char of line) {
