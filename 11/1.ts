@@ -17,8 +17,11 @@ for await (const line of stdin) {
   grid.push(row);
 }
 
-let count = 0;
-for (let i = 0; i < 100; i++) {
+let firstAllFlash = null;
+
+let i = 1;
+while (firstAllFlash == null) {
+  let currentCount = 0;
   for (const row of grid) {
     for (const jelly of row) {
       jelly.level += 1;
@@ -29,13 +32,20 @@ for (let i = 0; i < 100; i++) {
   for (const [y, row] of grid.entries()) {
     for (const [x, jelly] of row.entries()) {
       if (jelly.level > 9) {
-        count += flash(x, y);
+        currentCount += flash(x, y);
       }
     }
   }
+
+  if (firstAllFlash == null && currentCount === 100) {
+    firstAllFlash = i;
+  }
+
+  i++;
 }
 
-console.log('count', count);
+//console.log('count', count);
+console.log('all flashed at', firstAllFlash);
 
 function flash(x: number, y: number): number {
   let count = 1;
