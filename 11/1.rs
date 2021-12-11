@@ -13,16 +13,6 @@ struct Jellyfish {
 }
 
 fn main() {
-    /*
-      let mut grid: [[Jellyfish; 2]; 2] = [[Jellyfish {
-          level: 0,
-          has_flashed: false,
-      }; 2]; 2];
-
-      let jelly = &mut grid[0][0];
-      jelly.level = 9;
-    */
-
     let path = std::env::args().nth(1).expect("no path given");
     let args = Cli {
         path: std::path::PathBuf::from(path),
@@ -46,7 +36,7 @@ fn main() {
     }
 
     let mut flash_count: u64 = 0;
-    for _cycle in 1..100 {
+    for _cycle in 0..100 {
         for col in grid.iter_mut() {
             for mut jelly in col.iter_mut() {
                 jelly.level += 1;
@@ -59,19 +49,17 @@ fn main() {
             for (y, jelly) in col.iter().enumerate() {
                 if jelly.level > 9 {
                     flashers.push((x, y));
-                    //flash_count += flash(&mut grid, x, y);
                 }
             }
         }
 
-        println!("flashers {:?}", flashers);
-
         for (x, y) in flashers {
-            flash_count += flash(&mut grid, x, y);
+            if !grid[x][y].has_flashed {
+                flash_count += flash(&mut grid, x, y);
+            }
         }
     }
 
-    //println!("jellies {:?}", grid);
     println!("flash count {}", flash_count);
 }
 
@@ -82,8 +70,8 @@ fn flash(grid: &mut [[Jellyfish; 10]; 10], x: usize, y: usize) -> u64 {
     jelly.level = 0;
     jelly.has_flashed = true;
 
-    for i in (x.saturating_sub(1))..min(x + 1, 9) {
-        for j in (y.saturating_sub(1))..min(y + 1, 9) {
+    for i in (x.saturating_sub(1))..min(x + 2, 10) {
+        for j in (y.saturating_sub(1))..min(y + 2, 10) {
             let jelly = &mut grid[i][j];
             if !jelly.has_flashed {
                 jelly.level += 1;
