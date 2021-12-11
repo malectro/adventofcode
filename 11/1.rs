@@ -44,18 +44,11 @@ fn main() {
             }
         }
 
-        let mut flashers = vec![];
-        for (x, col) in grid.iter().enumerate() {
-            for (y, jelly) in col.iter().enumerate() {
-                if jelly.level > 9 {
-                    flashers.push((x, y));
+        for x in 0..grid.len() {
+            for y in 0..grid.len() {
+                if grid[x][y].level > 9 {
+                    flash_count += flash(&mut grid, x, y);
                 }
-            }
-        }
-
-        for (x, y) in flashers {
-            if !grid[x][y].has_flashed {
-                flash_count += flash(&mut grid, x, y);
             }
         }
     }
