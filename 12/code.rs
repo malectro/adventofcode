@@ -10,10 +10,9 @@ struct Cli {
 struct Cave {
     name: String,
     is_big: bool,
+    is_exit: bool,
     edges: Vec<usize>,
 }
-
-struct CavePath {}
 
 fn main() {
     let path = std::env::args().nth(1).expect("no path given");
@@ -38,6 +37,7 @@ fn main() {
                     let cave = Cave {
                         name: name.to_string(),
                         is_big: name.to_uppercase() == name,
+                        is_exit: ["start", "end"].contains(&name),
                         edges: Vec::new(),
                     };
                     caves.push(cave);
@@ -55,29 +55,45 @@ fn main() {
         }
     }
 
-    println!("caves\n{:?}", caves);
-
     let mut path = HashSet::new();
     let start_id = caves.iter().position(|cave| cave.name == "start").unwrap();
-    println!("total paths {}", count_paths(&caves, &mut path, start_id,));
+    println!(
+        "total paths {}",
+        count_paths(&caves, &mut path, false, start_id,)
+    );
 }
 
-fn count_paths(caves: &Vec<Cave>, path: &mut HashSet<usize>, cave_id: usize) -> u32 {
+fn count_paths(
+    caves: &Vec<Cave>,
+    path: &mut HashSet<usize>,
+    mut has_visited_small: bool,
+    cave_id: usize,
+) -> u32 {
     let cave = &caves[cave_id];
     if cave.name == "end" {
         return 1;
+    }
+
+    let mut is_small_twice = false;
+    if !cave.is_big && path.contains(&cave_id) {
+        if cave.is_exit || has_visited_small {
+            return 0;
+        }
+
+        has_visited_small = true;
+        is_small_twice = true;
     }
 
     let mut count = 0;
 
     path.insert(cave_id);
     for adjacent_id in cave.edges.iter() {
-        let adjacent_cave = &caves[*adjacent_id];
-        if adjacent_cave.is_big || !path.contains(&adjacent_id) {
-            count += count_paths(caves, path, *adjacent_id);
-        }
+        count += count_paths(caves, path, has_visited_small, *adjacent_id);
     }
-    path.remove(&cave_id);
+
+    if !is_small_twice {
+        path.remove(&cave_id);
+    }
 
     count
 }
