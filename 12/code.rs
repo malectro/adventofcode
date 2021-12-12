@@ -67,7 +67,7 @@ fn count_paths(
     path.insert(String::from(from_node));
     //path.insert(*from_node);
     for to_node in edges {
-        if !path.contains(to_node) {
+        if !path.contains(to_node) || &to_node.to_uppercase() == to_node {
             count += count_paths(edge_map, path, to_node);
         }
     }
