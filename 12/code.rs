@@ -6,10 +6,11 @@ struct Cli {
     path: std::path::PathBuf,
 }
 
-// #[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 struct Cave {
     name: String,
-    edges: Vec<Cave>,
+    is_big: bool,
+    edges: Vec<usize>,
 }
 
 struct CavePath {}
@@ -23,55 +24,60 @@ fn main() {
     let file = File::open(&args.path).expect("could not open file");
     let reader = BufReader::new(file);
 
-    let mut edge_map = HashMap::new();
+    let mut caves = Vec::new();
+    let mut cave_map: HashMap<String, usize> = HashMap::new();
+
     for line in reader.lines() {
         let text = line.expect("Cannot parse line");
-        let parts: Vec<&str> = text.split('-').collect();
 
-        //let (name_a, name_b) = (parts[0].to_string(), parts[1].to_string());
-        let (name_a, name_b) = (parts[0], parts[1]);
+        let cave_ids: Vec<usize> = text
+            .split('-')
+            .map(|name| match cave_map.get(name) {
+                Some(cave_id) => *cave_id,
+                None => {
+                    let cave = Cave {
+                        name: name.to_string(),
+                        is_big: name.to_uppercase() == name,
+                        edges: Vec::new(),
+                    };
+                    caves.push(cave);
+                    let cave_id = caves.len() - 1;
+                    cave_map.insert(name.to_string(), cave_id);
+                    cave_id
+                }
+            })
+            .collect();
+        let (cave_id_a, cave_id_b) = (cave_ids[0], cave_ids[1]);
 
-        add_edge(&mut edge_map, &name_a, &name_b);
-        add_edge(&mut edge_map, &name_b, &name_a);
-
-        println!("{} = {}", name_a, name_b);
+        for (id_a, id_b) in [(cave_id_a, cave_id_b), (cave_id_b, cave_id_a)] {
+            let cave = &mut caves[id_a];
+            cave.edges.push(id_b);
+        }
     }
+
+    println!("caves\n{:?}", caves);
 
     let mut path = HashSet::new();
-    let total_paths = count_paths(&edge_map, &mut path, &"start".to_string());
-
-    println!("total paths {}", total_paths);
+    let start_id = caves.iter().position(|cave| cave.name == "start").unwrap();
+    println!("total paths {}", count_paths(&caves, &mut path, start_id,));
 }
 
-fn add_edge(edge_map: &mut HashMap<String, Vec<String>>, name_a: &str, name_b: &str) {
-    let string_b = name_b.to_string();
-    let edge = edge_map.entry(name_a.to_string()).or_insert(Vec::new());
-    if !edge.contains(&string_b) {
-        edge.push(string_b);
-    }
-}
-
-fn count_paths(
-    edge_map: &HashMap<String, Vec<String>>,
-    path: &mut HashSet<String>,
-    from_node: &String,
-) -> u32 {
-    if from_node == "end" {
+fn count_paths(caves: &Vec<Cave>, path: &mut HashSet<usize>, cave_id: usize) -> u32 {
+    let cave = &caves[cave_id];
+    if cave.name == "end" {
         return 1;
     }
 
     let mut count = 0;
 
-    let edges = edge_map.get(from_node).expect("Must have edges");
-
-    path.insert(String::from(from_node));
-    //path.insert(*from_node);
-    for to_node in edges {
-        if !path.contains(to_node) || &to_node.to_uppercase() == to_node {
-            count += count_paths(edge_map, path, to_node);
+    path.insert(cave_id);
+    for adjacent_id in cave.edges.iter() {
+        let adjacent_cave = &caves[*adjacent_id];
+        if adjacent_cave.is_big || !path.contains(&adjacent_id) {
+            count += count_paths(caves, path, *adjacent_id);
         }
     }
-    path.remove(from_node);
+    path.remove(&cave_id);
 
     count
 }
