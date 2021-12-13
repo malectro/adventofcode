@@ -27,6 +27,36 @@ export async function* map<T, R>(
   }
 }
 
+/*
+export function filter<T>(
+  iter: AsyncIterableIterator<T | void>,
+  test: Boolean,
+): AsyncIterableIterator<T>;
+*/
+export async function* filter<T>(
+  iter: AsyncIterableIterator<T>,
+  test: (thing: T) => unknown,
+): AsyncIterableIterator<T> {
+  for await (const item of iter) {
+    if (test(item)) {
+      yield item;
+    }
+  }
+}
+
+export async function* mapNonNullable<T, R>(
+  iter: AsyncIterableIterator<T>,
+  mapper: (thing: T) => R,
+): AsyncIterableIterator<NonNullable<R>> {
+  for await (const item of iter) {
+    let mapped = mapper(item);
+    if (mapped != null) {
+      // @ts-ignore type refinement was completed above
+      yield mapped;
+    }
+  }
+}
+
 export function decodeText(
   iter: AsyncIterableIterator<Uint8Array>,
 ): AsyncIterableIterator<string> {
@@ -39,12 +69,22 @@ export async function* take<T>(
   limit: number,
 ): AsyncIterableIterator<T> {
   let count = 0;
-  for await (const item of iterable) {
-    yield item;
+  let next = await iterable.next();
+  while (count < limit && !next.done) {
+    yield next.value;
     count++;
-    if (count > limit) {
-      return;
-    }
+    next = await iterable.next();
+  }
+}
+
+export async function* takeWhile<T>(
+  iterable: AsyncIterableIterator<T>,
+  predicate: (thing: T) => unknown,
+): AsyncIterableIterator<T> {
+  let next = await iterable.next();
+  while (predicate(next.value) && !next.done) {
+    yield next.value;
+    next = await iterable.next();
   }
 }
 
@@ -85,7 +125,7 @@ export async function* reChunk<C>(
   for await (const item of iterable) {
     let step = handler(buffer, item);
 
-    while (step.chunk) {
+    while (step.chunk != null) {
       yield step.chunk;
       buffer = step.buffer;
       step = handler(initial, buffer);
