@@ -1,6 +1,6 @@
 use regex::Regex;
 use std::cmp::max;
-use std::collections::{HashSet};
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 
