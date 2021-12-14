@@ -7,6 +7,11 @@ edition = "2021"
 
 [dependencies]
 regex = "1.5"
+itertools = "0.10"
+
+[lib]
+name = "utils"
+path = "utils.rs"
 
 [[bin]]
 name = "day10"
@@ -23,3 +28,7 @@ path = "12/code.rs"
 [[bin]]
 name = "day13"
 path = "13/code.rs"
+
+[[bin]]
+name = "day14"
+path = "14/code.rs"
