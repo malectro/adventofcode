@@ -34,15 +34,58 @@ for (const i of range(0, 5)) {
   }
 }
 
-console.log('big grid', bigGrid);
+//console.log('big grid', bigGrid);
 
-const pathGrid = grid.map((row) => row.map((n) => null));
+const bigGridSize = {
+  x: gridSize.x * 5,
+  y: gridSize.y * 5,
+};
+
+const scoreGrid = bigGrid.map((row) => row.map((n) => null));
 const path = [{x: 0, y: 0}];
 
-const [bestScore, bestPath] = findBestPath(grid, gridSize, pathGrid, path);
+const [bestScore, bestPath] = findBestPath(
+  bigGrid,
+  bigGridSize,
+  scoreGrid,
+  path,
+);
 
 //console.log('gridSize', gridSize, grid);
-console.log('best score', bestScore);
+const pathGrid = bigGrid.map(
+  row => row.slice().fill(false),
+);
+for (const point of bestPath) {
+  pathGrid[point.y][point.x] = true;
+}
+
+console.log(bestPath.map(
+  point => `${point.x},${point.y}`
+).join('-'));
+
+console.log('best score', bestScore.toString());
+
+console.log(
+  bigGrid.map(
+    (row, y) => row.map((risk, x) => {
+      return pathGrid[y][x] ? risk : 0;
+    }).join(''),
+  ).join('\n'),
+  '\n',
+);
+
+//printGrid(bigGrid);
+
+console.log(
+  scoreGrid.map(
+    row => row.map((stuff) => {
+      const score = stuff ? stuff[0] : 9999;
+      return padNumber(score, 5);
+    }).join('|'),
+  ).join('\n'),
+  '\n',
+);
+//console.log('best score', bestScore);
 
 function findBestPath(
   grid: number[][],
@@ -55,7 +98,7 @@ function findBestPath(
   //console.log('checking point', currentPoint);
 
   if (currentPoint.x === gridSize.x - 1 && currentPoint.y === gridSize.y - 1) {
-    return [0, path.slice()];
+    return [0, []];
   }
 
   let min = Infinity;
@@ -70,15 +113,15 @@ function findBestPath(
 
       if (cachedScore == null) {
         cachedScore = findBestPath(grid, gridSize, pathGrid, path);
+        cachedScore[0] += grid[nextLocation.y][nextLocation.x];
         pathGrid[nextLocation.y][nextLocation.x] = cachedScore;
       }
 
       let [score, subPath] = cachedScore;
-      score += grid[nextLocation.y][nextLocation.x];
 
-      if (score < min) {
+      if (score <= min) {
         min = score;
-        bestPath = subPath;
+        bestPath = [nextLocation, ...subPath];
       }
 
       path.pop();
@@ -105,7 +148,7 @@ function isInBounds(point: Point, size: Point): boolean {
 }
 
 function incrementGrid(grid: number[][], inc: number): number[][] {
-  return grid.map((row) => row.map((v) => (v + inc) % 9));
+  return grid.map((row) => row.map((v) => (v + inc)).map(v => v > 9 ? v - 9 : v));
 }
 
 function projectGrid(
@@ -119,4 +162,18 @@ function projectGrid(
       bigGrid[origin.y + y][origin.x + x] = smallGrid[y][x];
     }
   }
+}
+
+function printGrid(grid: number[][]) {
+  console.log(grid.map((row) => row.join('')).join('\n'), '\n');
+}
+
+function padNumber(number: number, size: number): string {
+  let string = number.toString();
+
+  for (const _ of range(string.length, size)) {
+    string = '0' + string;
+  }
+
+  return string;
 }
