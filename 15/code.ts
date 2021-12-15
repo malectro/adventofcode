@@ -2,9 +2,9 @@ import {decodeText, chunkLines, toArray, range} from '../iter.ts';
 
 const directions = [
   {x: 1, y: 0},
-  //{x: -1, y: 0},
+  {x: -1, y: 0},
   {x: 0, y: 1},
-  //{x: 0, y: -1},
+  {x: 0, y: -1},
 ];
 
 const stdin = chunkLines(decodeText(Deno.iter(Deno.stdin)));
@@ -43,7 +43,37 @@ const bigGridSize = {
 
 const scoreGrid = bigGrid.map((row) => row.map((n) => null));
 const path = [{x: 0, y: 0}];
+// @ts-ignore
+scoreGrid[0][0] = 0;
 
+const queue = new PriorityQueue<{
+  point: Point;
+  score: number;
+}>();
+queue.comparitor = ({score}) => score;
+
+let current;
+while ((current = path.shift())) {
+  if (current.x === bigGridSize.x - 1 && current.y === bigGridSize.y - 1) {
+    break;
+  }
+
+  for (const direction of directions) {
+    const next = addPoint(current, direction);
+
+    if (isInBounds(next, bigGridSize)) {
+      const score = (scoreGrid[current.y]?.[current.x] ?? 0) + bigGrid[next.y][next.x];
+      const nextScore = scoreGrid[next.y][next.x];
+      if (nextScore == null || score < nextScore) {
+        // @ts-ignore
+        scoreGrid[next.y][next.x] = score;
+        path.push(next);
+      }
+    }
+  }
+}
+
+/*
 const [bestScore, bestPath] = findBestPath(
   bigGrid,
   bigGridSize,
@@ -52,25 +82,32 @@ const [bestScore, bestPath] = findBestPath(
 );
 
 //console.log('gridSize', gridSize, grid);
-const pathGrid = bigGrid.map(
-  row => row.slice().fill(false),
-);
+const pathGrid = bigGrid.map((row) => row.slice().fill(false));
 for (const point of bestPath) {
   pathGrid[point.y][point.x] = true;
 }
+*/
 
+/*
 console.log(bestPath.map(
   point => `${point.x},${point.y}`
 ).join('-'));
+*/
 
-console.log('best score', bestScore.toString());
+//console.log('best score', bestScore.toString());
 
+printGrid(grid);
 console.log(
-  bigGrid.map(
-    (row, y) => row.map((risk, x) => {
-      return pathGrid[y][x] ? risk : 0;
-    }).join(''),
-  ).join('\n'),
+  bigGrid
+    .map((row, y) =>
+      row
+        .map((risk, x) => {
+          //return pathGrid[y][x] ? risk : 0;
+          return risk;
+        })
+        .join(''),
+    )
+    .join('\n'),
   '\n',
 );
 
@@ -79,13 +116,42 @@ console.log(
 console.log(
   scoreGrid.map(
     row => row.map((stuff) => {
-      const score = stuff ? stuff[0] : 9999;
+      const score = stuff ? stuff : 9999;
       return padNumber(score, 5);
     }).join('|'),
   ).join('\n'),
   '\n',
 );
 //console.log('best score', bestScore);
+
+/*
+function findBestPath(
+  grid: number[][],
+  gridSize: Point,
+  path: Point[],
+  scoreGrid: number[][],
+) {
+  const currentPoint = path[path.length - 1];
+  const prevPoint = path[path.length - 2];
+
+  const score = grid[currentPoint.y][currentPoint.x];
+  if (currentPoint.x === gridSize.x - 1 && currentPoint.y === gridSize.y - 1) {
+    return score;
+  }
+
+  for (const direction of directions) {
+    const nextPoint = addPoint(currentPoint, direction);
+
+    if (
+      isInBounds(nextLocation, gridSize) &&
+      (!prevPoint ||
+        (prevPoint.x !== nextPoint.x && prevPoint.y !== nextPoint.y))
+    ) {
+      
+    }
+  }
+}
+*/
 
 function findBestPath(
   grid: number[][],
@@ -148,7 +214,9 @@ function isInBounds(point: Point, size: Point): boolean {
 }
 
 function incrementGrid(grid: number[][], inc: number): number[][] {
-  return grid.map((row) => row.map((v) => (v + inc)).map(v => v > 9 ? v - 9 : v));
+  return grid.map((row) =>
+    row.map((v) => v + inc).map((v) => (v > 9 ? v - 9 : v)),
+  );
 }
 
 function projectGrid(
@@ -176,4 +244,39 @@ function padNumber(number: number, size: number): string {
   }
 
   return string;
+}
+
+/*
+class Array2d<T> {
+  readonly size: Point;
+
+  constructor(size: Point, default: T) {
+    this._size = size;
+    this._array = Array(size.x).fill([]).map(
+      _ => Array(size.y).fill(default),
+    );
+  }
+
+  set(x: number, y: number, value: T) {
+    this._array[x][y] = value;
+  }
+}
+*/
+
+class PriorityQueue<T> {
+  private array: Array<T> = [];
+
+  comparitor: (a: T) => number = Number;
+
+  add(a: T) {
+    const score = this.comparitor(a);
+    const index = this.array.findIndex(
+      b => score < this.comparitor(b),
+    );
+    this.array.splice(index, 0, a);
+  }
+
+  next(): T | void {
+    return this.array.shift();
+  }
 }
