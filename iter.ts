@@ -197,3 +197,9 @@ export async function printIterator<T>(iter: AsyncIterableIterator<T>) {
     console.log(item);
   }
 }
+
+export function* range(from: number, to: number): IterableIterator<number> {
+  for (let i = from; i < to; i++) {
+    yield i;
+  }
+}
