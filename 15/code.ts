@@ -57,8 +57,6 @@ for (const i of range(0, 5)) {
   }
 }
 
-//console.log('big grid', bigGrid);
-
 const bigGridSize = {
   x: gridSize.x * 5,
   y: gridSize.y * 5,
@@ -104,129 +102,8 @@ while ((item = queue.next())) {
   }
 }
 
-/*
-const [bestScore, bestPath] = findBestPath(
-  bigGrid,
-  bigGridSize,
-  scoreGrid,
-  path,
-);
-
-//console.log('gridSize', gridSize, grid);
-const pathGrid = bigGrid.map((row) => row.slice().fill(false));
-for (const point of bestPath) {
-  pathGrid[point.y][point.x] = true;
-}
-*/
-
-/*
-console.log(bestPath.map(
-  point => `${point.x},${point.y}`
-).join('-'));
-*/
-
-//console.log('best score', bestScore.toString());
-
-printGrid(grid);
-console.log(
-  bigGrid
-    .map((row, y) =>
-      row
-        .map((risk, x) => {
-          //return pathGrid[y][x] ? risk : 0;
-          return risk;
-        })
-        .join(''),
-    )
-    .join('\n'),
-  '\n',
-);
-
-//printGrid(bigGrid);
-
-console.log(
-  scoreGrid.map(
-    row => row.map((stuff) => {
-      const score = stuff ? stuff : 9999;
-      return padNumber(score, 5);
-    }).join('|'),
-  ).join('\n'),
-  '\n',
-);
-//console.log('best score', bestScore);
-
-/*
-function findBestPath(
-  grid: number[][],
-  gridSize: Point,
-  path: Point[],
-  scoreGrid: number[][],
-) {
-  const currentPoint = path[path.length - 1];
-  const prevPoint = path[path.length - 2];
-
-  const score = grid[currentPoint.y][currentPoint.x];
-  if (currentPoint.x === gridSize.x - 1 && currentPoint.y === gridSize.y - 1) {
-    return score;
-  }
-
-  for (const direction of directions) {
-    const nextPoint = addPoint(currentPoint, direction);
-
-    if (
-      isInBounds(nextLocation, gridSize) &&
-      (!prevPoint ||
-        (prevPoint.x !== nextPoint.x && prevPoint.y !== nextPoint.y))
-    ) {
-      
-    }
-  }
-}
-*/
-
-function findBestPath(
-  grid: number[][],
-  gridSize: Point,
-  pathGrid: Array<Array<[number, Point[]] | null>>,
-  path: Point[],
-): [number, Point[]] {
-  const currentPoint = path[path.length - 1];
-
-  //console.log('checking point', currentPoint);
-
-  if (currentPoint.x === gridSize.x - 1 && currentPoint.y === gridSize.y - 1) {
-    return [0, []];
-  }
-
-  let min = Infinity;
-  let bestPath: Point[] = [];
-  for (const direction of directions) {
-    let nextLocation = addPoint(currentPoint, direction);
-
-    if (isInBounds(nextLocation, gridSize)) {
-      path.push(nextLocation);
-
-      let cachedScore = pathGrid[nextLocation.y][nextLocation.x];
-
-      if (cachedScore == null) {
-        cachedScore = findBestPath(grid, gridSize, pathGrid, path);
-        cachedScore[0] += grid[nextLocation.y][nextLocation.x];
-        pathGrid[nextLocation.y][nextLocation.x] = cachedScore;
-      }
-
-      let [score, subPath] = cachedScore;
-
-      if (score <= min) {
-        min = score;
-        bestPath = [nextLocation, ...subPath];
-      }
-
-      path.pop();
-    }
-  }
-
-  return [min, bestPath];
-}
+const finalScore = scoreGrid[bigGridSize.y - 1][bigGridSize.x - 1];
+console.log('final score', finalScore);
 
 type Point = {
   x: number;
@@ -276,20 +153,3 @@ function padNumber(number: number, size: number): string {
 
   return string;
 }
-
-/*
-class Array2d<T> {
-  readonly size: Point;
-
-  constructor(size: Point, default: T) {
-    this._size = size;
-    this._array = Array(size.x).fill([]).map(
-      _ => Array(size.y).fill(default),
-    );
-  }
-
-  set(x: number, y: number, value: T) {
-    this._array[x][y] = value;
-  }
-}
-*/
