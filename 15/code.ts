@@ -20,19 +20,18 @@ const gridSize = {
   y: grid.length,
 };
 
-const pathGrid = grid.map((row) => row.map((n) => false));
+const pathGrid = grid.map((row) => row.map((n) => null));
 const path = [{x: 0, y: 0}];
-pathGrid[0][0] = true;
 
 const [bestScore, bestPath] = findBestPath(grid, gridSize, pathGrid, path);
 
 //console.log('gridSize', gridSize, grid);
-console.log('best score', bestScore, bestPath);
+console.log('best score', bestScore);
 
 function findBestPath(
   grid: number[][],
   gridSize: Point,
-  pathGrid: boolean[][],
+  pathGrid: Array<Array<[number, Point[]] | null>>,
   path: Point[],
 ): [number, Point[]] {
   const currentPoint = path[path.length - 1];
@@ -49,19 +48,26 @@ function findBestPath(
     let nextLocation = addPoint(currentPoint, direction);
 
     if (
-      isInBounds(nextLocation, gridSize) &&
-      !pathGrid[nextLocation.y][nextLocation.x]
+      isInBounds(nextLocation, gridSize)
     ) {
-      pathGrid[nextLocation.y][nextLocation.x] = true;
       path.push(nextLocation);
-      let [score, subPath] = findBestPath(grid, gridSize, pathGrid, path);
+
+      let cachedScore = pathGrid[nextLocation.y][nextLocation.x];
+      
+      if (cachedScore == null) {
+        cachedScore = findBestPath(grid, gridSize, pathGrid, path);
+        pathGrid[nextLocation.y][nextLocation.x] = cachedScore;
+      }
+
+      let [score, subPath] = cachedScore;
       score += grid[nextLocation.y][nextLocation.x];
+
       if (score < min) {
         min = score;
         bestPath = subPath;
       }
+
       path.pop();
-      pathGrid[nextLocation.y][nextLocation.x] = false;
     }
   }
 

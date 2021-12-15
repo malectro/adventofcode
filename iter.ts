@@ -133,6 +133,10 @@ export async function* reChunk<C>(
 
     buffer = step.buffer;
   }
+
+  if (buffer) {
+    yield buffer;
+  }
 }
 
 export function chunkLines(iter: AsyncIterableIterator<string>) {
