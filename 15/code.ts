@@ -2,9 +2,9 @@ import {decodeText, chunkLines, toArray} from '../iter.ts';
 
 const directions = [
   {x: 1, y: 0},
-  {x: -1, y: 0},
+  //{x: -1, y: 0},
   {x: 0, y: 1},
-  {x: 0, y: -1},
+  //{x: 0, y: -1},
 ];
 
 const stdin = chunkLines(decodeText(Deno.iter(Deno.stdin)));
@@ -22,26 +22,29 @@ const gridSize = {
 
 const pathGrid = grid.map((row) => row.map((n) => false));
 const path = [{x: 0, y: 0}];
+pathGrid[0][0] = true;
 
-const bestScore = findBestPath(grid, gridSize, pathGrid, path);
+const [bestScore, bestPath] = findBestPath(grid, gridSize, pathGrid, path);
 
-console.log('best score', bestScore);
+//console.log('gridSize', gridSize, grid);
+console.log('best score', bestScore, bestPath);
 
 function findBestPath(
   grid: number[][],
   gridSize: Point,
   pathGrid: boolean[][],
   path: Point[],
-): number {
+): [number, Point[]] {
   const currentPoint = path[path.length - 1];
 
   //console.log('checking point', currentPoint);
 
   if (currentPoint.x === gridSize.x - 1 && currentPoint.y === gridSize.y - 1) {
-    return 0;
+    return [0, path.slice()];
   }
 
   let min = Infinity;
+  let bestPath: Point[] = [];
   for (const direction of directions) {
     let nextLocation = addPoint(currentPoint, direction);
 
@@ -51,17 +54,18 @@ function findBestPath(
     ) {
       pathGrid[nextLocation.y][nextLocation.x] = true;
       path.push(nextLocation);
-      min = Math.min(
-        grid[nextLocation.y][nextLocation.x] +
-          findBestPath(grid, gridSize, pathGrid, path),
-        min,
-      );
+      let [score, subPath] = findBestPath(grid, gridSize, pathGrid, path);
+      score += grid[nextLocation.y][nextLocation.x];
+      if (score < min) {
+        min = score;
+        bestPath = subPath;
+      }
       path.pop();
       pathGrid[nextLocation.y][nextLocation.x] = false;
     }
   }
 
-  return min;
+  return [min, bestPath];
 }
 
 type Point = {
