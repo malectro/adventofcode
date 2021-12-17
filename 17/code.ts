@@ -43,7 +43,7 @@ for (let x of range(0, target.end.x + 1)) {
 }
 */
 
-const validXs = [...range(0, target.end.x + 1)].filter(x => {
+const validXs = [...range(0, target.end.x + 1)].filter((x) => {
   let position = 0;
   while (position <= target.end.x) {
     console.log(x, position);
@@ -61,7 +61,9 @@ const validXs = [...range(0, target.end.x + 1)].filter(x => {
   return false;
 });
 
-const validYs = [...range(target.origin.y, 10_000)].filter(y => {
+const validYs = [
+  ...range(target.origin.y, target.origin.y * Math.sign(target.origin.y)),
+].filter((y) => {
   let position = 0;
   while (position >= target.origin.y) {
     if (position <= target.end.y) {
