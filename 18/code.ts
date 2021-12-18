@@ -116,18 +116,13 @@ function reduceTree(tree: Tree): Tree {
 
     let thing;
     while ((thing = queue.pop()) != null) {
-      //console.log('visiting', thing);
       const {tree, depth} = thing;
+
       if (tree.type === 'pair') {
-        // @ts-ignore fix this?
         if (mode === ReductionMode.Explode && depth >= 4) {
           const {left, right} = tree;
 
-          //console.log('depth 4', tree);
-
           if (left.type === 'value' && right.type === 'value') {
-            //console.log('found exploder node', tree);
-
             // explode
             let nearestLeft = getNearestValue(tree, 'left');
             let nearestRight = getNearestValue(tree, 'right');
@@ -161,16 +156,20 @@ function reduceTree(tree: Tree): Tree {
       ) {
         const left = makeValueNode(Math.floor(tree.value / 2));
         const right = makeValueNode(Math.ceil(tree.value / 2));
+
         const newNode: PairNode = {
           type: 'pair',
           parent: null,
           left,
           right,
         };
+
         left.parent = newNode;
         right.parent = newNode;
+
         spliceNode(tree, newNode);
         modes = [ReductionMode.Split, ReductionMode.Explode];
+
         break;
       }
     }
@@ -230,22 +229,6 @@ function resolveMagnitude(tree: Tree): number {
 
   return 3 * resolveMagnitude(tree.left) + 2 * resolveMagnitude(tree.right);
 }
-
-/*
-function *getLeafPairs(tree: Tree): IterableIterator<Tree> {
-  if (tree.type === 'pair') {
-    const {left, right} = tree;
-
-    if (left.type === 'value' && right.type === 'value') {
-      yield tree;
-    } else if (left.type === 'pair') {
-      yield *getLeafPairs(left);
-    } else if (right.type === 'pair') {
-      
-    }
-  }
-}
-*/
 
 function serializeTree(tree: Tree): string {
   return JSON.stringify(treeToPairs(tree));
