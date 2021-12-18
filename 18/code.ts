@@ -1,4 +1,12 @@
-import {decodeText, chunkLines, take, map, reduce, range} from '../iter.ts';
+import {
+  decodeText,
+  chunkLines,
+  take,
+  map,
+  reduce,
+  range,
+  toArray,
+} from '../iter.ts';
 
 enum ReductionMode {
   Explode = 0,
@@ -6,9 +14,9 @@ enum ReductionMode {
 }
 
 const lines = chunkLines(decodeText(Deno.iter(Deno.stdin)));
-const trees = map(lines, (line) => parsePairs(JSON.parse(line)));
+const trees = await toArray(map(lines, (line) => parsePairs(JSON.parse(line))));
 
-const tree1 = (await trees.next()).value;
+const tree1 = trees[0];
 
 if (!tree1) {
   throw new Error('Must have at least one snail number.');
@@ -17,13 +25,26 @@ if (!tree1) {
 console.log(serializeTree(tree1));
 
 let tree = tree1;
-for await (const nextTree of trees) {
+for (const nextTree of trees.slice(1)) {
   tree = addTrees(tree, nextTree);
   tree = reduceTree(tree);
   console.log(serializeTree(tree));
 }
 
 console.log('magnitude', resolveMagnitude(tree));
+
+const largest = trees.reduce((acc, tree1) => {
+  return trees.reduce((acc, tree2) => {
+    return Math.max(
+      tree1 !== tree2
+        ? resolveMagnitude(reduceTree(addTrees(tree1, tree2)))
+        : 0,
+      acc,
+    );
+  }, acc);
+}, 0);
+
+console.log('largest', largest);
 
 type Pair = [PairElement, PairElement];
 type PairElement = Pair | number;
@@ -71,18 +92,23 @@ function addTrees(tree1: Tree, tree2: Tree): Tree {
   const newTree: PairNode = {
     type: 'pair',
     parent: null,
-    left: tree1,
-    right: tree2,
+    left: structuredClone(tree1),
+    right: structuredClone(tree2),
   };
 
-  tree1.parent = newTree;
-  tree2.parent = newTree;
+  newTree.left.parent = newTree;
+  newTree.right.parent = newTree;
 
   return newTree;
 }
 
 function reduceTree(tree: Tree): Tree {
-  let modes: Array<ReductionMode> = [ReductionMode.Split, ReductionMode.Explode];
+  let modes: Array<ReductionMode> = [
+    ReductionMode.Split,
+    ReductionMode.Explode,
+  ];
+
+  tree = structuredClone(tree);
 
   let mode;
   while ((mode = modes.pop()) != null) {
@@ -175,9 +201,7 @@ function getNearestValue(tree: Tree, dir: 'left' | 'right'): ValueNode | void {
   }
 }
 
-function *getValueNodes(tree: Tree): IterableIterator<ValueNode> {
-
-}
+function* getValueNodes(tree: Tree): IterableIterator<ValueNode> {}
 
 function spliceNode(oldNode: Tree, newNode: Tree) {
   const {parent} = oldNode;
