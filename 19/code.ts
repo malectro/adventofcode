@@ -43,6 +43,18 @@ const tree = buildTree(
 const beacons = mergeTree(tree);
 console.log('beacon count', beacons.length);
 
+const scannerPositions = getScannerPositions(tree);
+
+let max = 0;
+for (const point1 of scannerPositions) {
+  for (const point2 of scannerPositions) {
+    const diff = Pt.abs(Pt.difference(point1, point2));
+    max = Math.max(max, diff.x + diff.y + diff.z);
+  }
+}
+
+console.log('max distance', max);
+
 /*
 let beacons = scanners[0];
 
@@ -244,6 +256,20 @@ function mergeTree(tree: Tree): Point[] {
     )),
     tree.scanner.beacons,
   );
+}
+
+function getScannerPositions(tree: Tree): Point[] {
+  const points = [Pt.make()];
+
+  for (const child of tree.children) {
+    points.push(
+      ...getScannerPositions(child).map(
+        point => child.transform ? child.transform(point) : point,
+      ),
+    );
+  }
+
+  return points;
 }
 
 function getDifferenceMatrix(scanner: Point[]): Point[][] {
