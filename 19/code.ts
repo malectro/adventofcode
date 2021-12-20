@@ -55,121 +55,6 @@ for (const point1 of scannerPositions) {
 
 console.log('max distance', max);
 
-/*
-let beacons = scanners[0];
-
-let scannersLeft = Array.from(scanners.entries()).slice(1);
-while (scannersLeft.length > 0) {
-  //console.log('scanners left', scannersLeft.length);
-  const missedScanners: Array<[number, Point[]]> = [];
-  for (const [name, scanner] of scannersLeft) {
-    const differences = getDifferenceMatrix(beacons);
-    const scannerDiffs = getDifferenceMatrix(scanner);
-
-    const transform = getTransform(beacons, differences, scanner, scannerDiffs);
-
-    if (transform) {
-      beacons = mergeScanners(beacons, scanner.map(transform));
-      console.log(
-        `scanner ${name} position`,
-        transform(Pt.make()),
-        beacons.length,
-      );
-      console.log(
-        beacons.slice().sort((a, b) => {
-          if (a.x !== b.x) {
-            return a.x - b.x;
-          }
-          if (a.y !== b.y) {
-            return a.y - b.y;
-          }
-          return a.z - b.z;
-        }),
-      );
-    } else {
-      missedScanners.push([name, scanner]);
-    }
-  }
-  scannersLeft = missedScanners;
-}
-*/
-
-//console.log('final size', beacons.length);
-
-/*
-const scanner2 = scanners[1];
-
-const s1Differences = getDifferenceMatrix(scanner1);
-
-console.log('difference', s1Differences[0]);
-
-const s2Differences = getDifferenceMatrix(scanner2);
-
-let result;
-
-let pointMap;
-let signPoint;
-for (const [i, beaconA] of scanner2.entries()) {
-  let count = 0;
-  const currentMap = [];
-  for (const [j, beaconB] of scanner2.entries()) {
-    const difference = Pt.difference(beaconA, beaconB);
-    const index = s1Differences[0].findIndex((beacon) =>
-      Pt.areEqual(Pt.abs(beacon), Pt.abs(difference)),
-    );
-    if (index >= 0) {
-      currentMap[j] = {
-        index,
-        difference,
-      };
-      count++;
-    } else {
-      currentMap[j] = null;
-    }
-    //difference[i][j] = Pt.difference(beaconA, beaconB);
-  }
-  if (count > 11) {
-    pointMap = currentMap;
-    console.log('found 12 similar points', i);
-  }
-}
-
-if (pointMap) {
-  const map = new Map();
-  for (const [index, item] of pointMap.entries()) {
-    if (item != null) {
-      const {index: mappedIndex, difference} = item;
-      const s1Difference = s1Differences[0][mappedIndex];
-      const sign = {
-        x: Math.sign(s1Difference.x) * Math.sign(difference.x),
-        y: Math.sign(s1Difference.y) * Math.sign(difference.y),
-        z: Math.sign(s1Difference.z) * Math.sign(difference.z),
-      };
-      map.set(scanner2[index], {point: scanner1[mappedIndex], sign});
-    }
-  }
-
-  const diffs = Array.from(map).map(([point1, {point: point2, sign}]) =>
-    Pt.difference(point1, Pt.multiply(point2, sign)),
-  );
-
-  console.log('point map', map, diffs);
-}
-
-const transform = getTransform(
-  scanner1,
-  s1Differences,
-  scanner2,
-  s2Differences,
-);
-
-if (transform) {
-  const merged = mergeScanners(scanner1, scanner2.map(transform));
-  console.log('test', scanner1, scanner2.map(transform));
-
-  console.log('merged', scanner1.length, merged.length);
-}
-*/
 interface Scanner {
   beacons: Point[];
   diffs: Point[][];
@@ -211,20 +96,6 @@ function buildTree(scanners: Scanner[]): Tree {
     leftOver = newLeftOver;
   }
 
-  /*
-  let entry;
-  while ((entry = leftOver.shift())) {
-    const [name, scanner] = entry;
-    console.log('trying', name);
-    const wasInserted = insert(tree, scanner);
-
-    if (!wasInserted) {
-      console.log('success!');
-      leftOver.push(entry);
-    }
-  }
-  */
-
   return tree;
 }
 
@@ -245,8 +116,6 @@ function insert(tree: Tree, scanner: Scanner): Tree | void {
     tree.children.push(newNode);
     return newNode;
   }
-
-  //return tree.children.some((child) => insert(child, scanner));
 }
 
 function mergeTree(tree: Tree): Point[] {
