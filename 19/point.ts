@@ -74,3 +74,13 @@ for (const x of axes) {
   }
 }
 export {formats};
+
+const signs = [-1, 1];
+export const pointSigns: Point[] = [];
+for (const x of signs) {
+  for (const y of signs) {
+    for (const z of signs) {
+      pointSigns.push({x, y, z});
+    }
+  }
+}

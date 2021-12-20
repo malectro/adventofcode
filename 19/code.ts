@@ -36,50 +36,15 @@ scanners.push(scanner);
 
 //console.log('scanners', scanners);
 
-let beacons = scanners[0];
-
-/*
-{
-  let scanner = scanners[1];
-
-  let differences = getDifferenceMatrix(beacons);
-  let scannerDiffs = getDifferenceMatrix(scanner);
-
-  let transform = getTransform(beacons, differences, scanner, scannerDiffs);
-
-  if (transform) {
-    beacons = mergeScanners(beacons, scanner.map(transform));
-    console.log(`scanner 1 position`, transform(Pt.make()), beacons.length);
-  }
-}
-
-{
-  let scanner = scanners[4];
-
-  let differences = getDifferenceMatrix(beacons);
-  let scannerDiffs = getDifferenceMatrix(scanner);
-
-  let transform = getTransform(beacons, differences, scanner, scannerDiffs);
-
-  if (transform) {
-    beacons = mergeScanners(beacons, scanner.map(transform));
-    console.log(`scanner 4 position`, transform(Pt.make()), beacons.length);
-  }
-}
-*/
-
-/*
-console.log('differences', getDifferenceMatrix(scanners[1]), getDifferenceMatrix(scanners[4]));
-console.log(
-  'transform',
-  getTransform(
-    scanners[1],
-    getDifferenceMatrix(scanners[1]),
-    scanners[4],
-    getDifferenceMatrix(scanners[4]),
-  ),
+const tree = buildTree(
+  scanners.map((beacons) => ({beacons, diffs: getDifferenceMatrix(beacons)})),
 );
-*/
+
+const beacons = mergeTree(tree);
+console.log('beacon count', beacons.length);
+
+/*
+let beacons = scanners[0];
 
 let scannersLeft = Array.from(scanners.entries()).slice(1);
 while (scannersLeft.length > 0) {
@@ -98,7 +63,6 @@ while (scannersLeft.length > 0) {
         transform(Pt.make()),
         beacons.length,
       );
-      /*
       console.log(
         beacons.slice().sort((a, b) => {
           if (a.x !== b.x) {
@@ -110,15 +74,15 @@ while (scannersLeft.length > 0) {
           return a.z - b.z;
         }),
       );
-      */
     } else {
       missedScanners.push([name, scanner]);
     }
   }
   scannersLeft = missedScanners;
 }
+*/
 
-console.log('final size', beacons.length);
+//console.log('final size', beacons.length);
 
 /*
 const scanner2 = scanners[1];
@@ -194,6 +158,93 @@ if (transform) {
   console.log('merged', scanner1.length, merged.length);
 }
 */
+interface Scanner {
+  beacons: Point[];
+  diffs: Point[][];
+}
+
+interface Tree {
+  scanner: Scanner;
+  children: Tree[];
+  transform?: (point: Point) => Point;
+}
+
+function buildTree(scanners: Scanner[]): Tree {
+  const first = scanners[0];
+
+  let leftOver = Array.from(scanners.entries()).slice(1);
+
+  const tree = {
+    scanner: first,
+    children: [],
+  };
+
+  const toTry: Tree[] = [tree];
+
+  let node;
+  while ((node = toTry.shift())) {
+    const newLeftOver = [];
+    for (const entry of leftOver) {
+      const [name, scanner] = entry;
+      console.log('trying', name);
+
+      const newNode = insert(node, scanner);
+      if (newNode) {
+        console.log('success!');
+        toTry.push(newNode);
+      } else {
+        newLeftOver.push(entry);
+      }
+    }
+    leftOver = newLeftOver;
+  }
+
+  /*
+  let entry;
+  while ((entry = leftOver.shift())) {
+    const [name, scanner] = entry;
+    console.log('trying', name);
+    const wasInserted = insert(tree, scanner);
+
+    if (!wasInserted) {
+      console.log('success!');
+      leftOver.push(entry);
+    }
+  }
+  */
+
+  return tree;
+}
+
+function insert(tree: Tree, scanner: Scanner): Tree | void {
+  const first = tree.scanner;
+  const transform = getTransform(
+    first.beacons,
+    first.diffs,
+    scanner.beacons,
+    scanner.diffs,
+  );
+  if (transform) {
+    const newNode = {
+      scanner,
+      transform,
+      children: [],
+    };
+    tree.children.push(newNode);
+    return newNode;
+  }
+
+  //return tree.children.some((child) => insert(child, scanner));
+}
+
+function mergeTree(tree: Tree): Point[] {
+  return tree.children.reduce(
+    (beacons, tree) => mergeScanners(beacons, mergeTree(tree).map(
+      beacon => tree.transform ? tree.transform(beacon) : beacon
+    )),
+    tree.scanner.beacons,
+  );
+}
 
 function getDifferenceMatrix(scanner: Point[]): Point[][] {
   const s1Differences = Array(scanner.length)
@@ -218,47 +269,49 @@ function getTransform(
   for (const diffRow0 of differences1) {
     for (const [i, row] of differences2.entries()) {
       for (const format of Pt.formats) {
-        let count = 0;
-        let currentMap = [];
-        for (const [j, diff2] of row.entries()) {
-          if (i !== j) {
-            const index = diffRow0.findIndex((diff1) =>
-              Pt.areEqual(Pt.reformat(Pt.abs(diff2), format), Pt.abs(diff1)),
-            );
-            if (index >= 0) {
-              count++;
-              currentMap[j] = {
-                index,
-                format,
-                diff1: diffRow0[index],
-                diff2,
-              };
-            } else {
-              currentMap[j] = null;
+        for (const sign of Pt.pointSigns) {
+          let count = 0;
+          let currentMap = [];
+          for (const [j, diff2] of row.entries()) {
+            if (i !== j) {
+              const index = diffRow0.findIndex((diff1) =>
+                Pt.areEqual(
+                  Pt.multiply(Pt.reformat(diff2, format), sign),
+                  diff1,
+                ),
+              );
+              if (index >= 0) {
+                count++;
+                currentMap[j] = {
+                  index,
+                  format,
+                  sign,
+                  diff1: diffRow0[index],
+                  diff2,
+                };
+              } else {
+                currentMap[j] = null;
+              }
             }
           }
-        }
-        //console.log('row count', i, count);
-        if (count > 10) {
-          for (const [i, item] of currentMap.entries()) {
-            if (item) {
-              const {format} = item;
+          //console.log('row count', i, count);
+          if (count > 10) {
+            for (const [i, item] of currentMap.entries()) {
+              if (item) {
+                const scannerDiff = Pt.difference(
+                  scanner1[item.index],
+                  Pt.multiply(Pt.reformat(scanner2[i], format), sign),
+                );
 
-              const sign = Pt.multiply(
-                Pt.sign(Pt.reformat(item.diff2, format)),
-                Pt.sign(item.diff1),
-              );
+                //console.log(sign, scannerDiff);
 
-              const scannerDiff = Pt.difference(
-                scanner1[item.index],
-                Pt.multiply(Pt.reformat(scanner2[i], format), sign),
-              );
-
-              //console.log(sign, scannerDiff);
-
-              return (point: Point) => {
-                return Pt.difference(scannerDiff, Pt.multiply(Pt.reformat(point, format), sign));
-              };
+                return (point: Point) => {
+                  return Pt.difference(
+                    scannerDiff,
+                    Pt.multiply(Pt.reformat(point, format), sign),
+                  );
+                };
+              }
             }
           }
         }
