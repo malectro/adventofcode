@@ -40,7 +40,12 @@ for (const _ of range(0, 50)) {
   //console.log('zoom', '\n', serializeImage(newImage), '\n');
 
   image = newImage;
-  zeroSpace = (zeroSpace + 1) % 2;
+
+  if (zeroSpace === 0 && decoder[0] === '#') {
+    zeroSpace = 1;
+  } else if (zeroSpace === 1 && decoder[511] === '.') {
+    zeroSpace = 0;
+  }
 }
 
 console.log(
