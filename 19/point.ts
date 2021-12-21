@@ -46,8 +46,16 @@ export function areEqual(point1: Point, point2: Point): boolean {
   );
 }
 
+export function sum(point: Point): number {
+  return point.x + point.z + point.y;
+}
+ 
+export function manhattan(point1: Point, point2: Point): number {
+  return sum(abs(difference(point1, point2)));
+}
+
 type Axis = 'x' | 'y' | 'z';
-type PointFormat = {
+export type PointFormat = {
   x: Axis;
   y: Axis;
   z: Axis;

@@ -34,8 +34,6 @@ for await (let line of lines) {
 }
 scanners.push(scanner);
 
-//console.log('scanners', scanners);
-
 const tree = buildTree(
   scanners.map((beacons) => ({beacons, diffs: getDifferenceMatrix(beacons)})),
 );
@@ -48,8 +46,7 @@ const scannerPositions = getScannerPositions(tree);
 let max = 0;
 for (const point1 of scannerPositions) {
   for (const point2 of scannerPositions) {
-    const diff = Pt.abs(Pt.difference(point1, point2));
-    max = Math.max(max, diff.x + diff.y + diff.z);
+    max = Math.max(max, Pt.manhattan(point1, point2));
   }
 }
 
@@ -57,7 +54,7 @@ console.log('max distance', max);
 
 interface Scanner {
   beacons: Point[];
-  diffs: Point[][];
+  diffs: number[][];
 }
 
 interface Tree {
@@ -120,9 +117,13 @@ function insert(tree: Tree, scanner: Scanner): Tree | void {
 
 function mergeTree(tree: Tree): Point[] {
   return tree.children.reduce(
-    (beacons, tree) => mergeScanners(beacons, mergeTree(tree).map(
-      beacon => tree.transform ? tree.transform(beacon) : beacon
-    )),
+    (beacons, tree) =>
+      mergeScanners(
+        beacons,
+        mergeTree(tree).map((beacon) =>
+          tree.transform ? tree.transform(beacon) : beacon,
+        ),
+      ),
     tree.scanner.beacons,
   );
 }
@@ -132,8 +133,8 @@ function getScannerPositions(tree: Tree): Point[] {
 
   for (const child of tree.children) {
     points.push(
-      ...getScannerPositions(child).map(
-        point => child.transform ? child.transform(point) : point,
+      ...getScannerPositions(child).map((point) =>
+        child.transform ? child.transform(point) : point,
       ),
     );
   }
@@ -141,14 +142,14 @@ function getScannerPositions(tree: Tree): Point[] {
   return points;
 }
 
-function getDifferenceMatrix(scanner: Point[]): Point[][] {
+function getDifferenceMatrix(scanner: Point[]): number[][] {
   const s1Differences = Array(scanner.length)
     .fill(null)
     .map((_) => Array(scanner.length).fill(Pt.make()));
 
   for (const [i, beaconA] of scanner.entries()) {
     for (const [j, beaconB] of scanner.entries()) {
-      s1Differences[i][j] = Pt.difference(beaconA, beaconB);
+      s1Differences[i][j] = Pt.manhattan(beaconA, beaconB);
     }
   }
 
@@ -157,56 +158,58 @@ function getDifferenceMatrix(scanner: Point[]): Point[][] {
 
 function getTransform(
   scanner1: Point[],
-  differences1: Point[][],
+  differences1: number[][],
   scanner2: Point[],
-  differences2: Point[][],
+  differences2: number[][],
 ) {
-  for (const diffRow0 of differences1) {
+  for (const [index1, diffRow0] of differences1.entries()) {
     for (const [i, row] of differences2.entries()) {
-      for (const format of Pt.formats) {
-        for (const sign of Pt.pointSigns) {
-          let count = 0;
-          let currentMap = [];
-          for (const [j, diff2] of row.entries()) {
-            if (i !== j) {
-              const index = diffRow0.findIndex((diff1) =>
-                Pt.areEqual(
-                  Pt.multiply(Pt.reformat(diff2, format), sign),
-                  diff1,
-                ),
-              );
-              if (index >= 0) {
-                count++;
-                currentMap[j] = {
-                  index,
-                  format,
-                  sign,
-                  diff1: diffRow0[index],
-                  diff2,
-                };
-              } else {
-                currentMap[j] = null;
-              }
-            }
+      let count = 0;
+      let currentMap = [];
+      for (const [j, diff2] of row.entries()) {
+        if (i !== j) {
+          const index2 = diffRow0.findIndex((diff1) => diff1 === diff2);
+          if (index2 >= 0) {
+            count++;
+            currentMap[j] = {
+              index1,
+              index2,
+              i,
+              j,
+              diff1: diffRow0[index2],
+              diff2,
+              point1: scanner1[index2],
+              point2: scanner2[j],
+            };
+          } else {
+            currentMap[j] = null;
           }
-          //console.log('row count', i, count);
-          if (count > 10) {
-            for (const [i, item] of currentMap.entries()) {
-              if (item) {
-                const scannerDiff = Pt.difference(
-                  scanner1[item.index],
-                  Pt.multiply(Pt.reformat(scanner2[i], format), sign),
+        }
+      }
+      if (count > 10) {
+        for (const [i, item] of currentMap.entries()) {
+          if (item) {
+            const diff1 = Pt.difference(
+              scanner1[item.index1],
+              scanner1[item.index2],
+            );
+            const diff2 = Pt.difference(scanner2[item.i], scanner2[item.j]);
+
+            const stuff = resolveFormat(diff1, diff2);
+
+            if (stuff) {
+              const [format, sign] = stuff;
+              const scannerDiff = Pt.difference(
+                scanner1[item.index2],
+                Pt.multiply(Pt.reformat(scanner2[i], format), sign),
+              );
+
+              return (point: Point) => {
+                return Pt.difference(
+                  scannerDiff,
+                  Pt.multiply(Pt.reformat(point, format), sign),
                 );
-
-                //console.log(sign, scannerDiff);
-
-                return (point: Point) => {
-                  return Pt.difference(
-                    scannerDiff,
-                    Pt.multiply(Pt.reformat(point, format), sign),
-                  );
-                };
-              }
+              };
             }
           }
         }
@@ -225,4 +228,17 @@ function mergeScanners(scanner1: Point[], scanner2: Point[]): Point[] {
   }
 
   return result;
+}
+
+function resolveFormat(
+  diff1: Point,
+  diff2: Point,
+): [Pt.PointFormat, Point] | void {
+  for (const format of Pt.formats) {
+    for (const sign of Pt.pointSigns) {
+      if (Pt.areEqual(Pt.multiply(Pt.reformat(diff2, format), sign), diff1)) {
+        return [format, sign];
+      }
+    }
+  }
 }
