@@ -199,7 +199,12 @@ export async function printIterator<T>(iter: AsyncIterableIterator<T>) {
 }
 
 export function* range(from: number, to: number): IterableIterator<number> {
-  for (let i = from; i < to; i++) {
+  const step = Math.sign(to - from);
+  for (let i = from; i !== to; i += step) {
     yield i;
   }
+}
+
+export function clamp(number: number, floor: number, ceiling: number): number {
+  return Math.max(Math.min(number, ceiling), floor);
 }

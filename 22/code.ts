@@ -6,6 +6,7 @@ import {
   map,
   reduce,
   range,
+  clamp,
   toArray,
 } from '../iter.ts';
 
@@ -49,11 +50,14 @@ const cubes = Array(101)
 
 for await (const {action, from, to} of instructions) {
   const value = action === 'on' ? true : false;
-  for (const x of range(Math.max(0, from.x + 50), Math.min(101, to.x + 51))) {
-    for (const y of range(Math.max(0, from.y + 50), Math.min(101, to.y + 51))) {
+  for (const x of range(clamp(from.x + 50, 0, 100), clamp(to.x + 51, 0, 100))) {
+    for (const y of range(
+      clamp(from.y + 50, 0, 100),
+      clamp(to.y + 51, 0, 100),
+    )) {
       for (const z of range(
-        Math.max(0, from.z + 50),
-        Math.min(101, to.z + 51),
+        clamp(from.z + 50, 0, 100),
+        clamp(to.z + 51, 0, 100),
       )) {
         cubes[x][y][z] = value;
       }
