@@ -82,7 +82,7 @@ export async function* takeWhile<T>(
   predicate: (thing: T) => unknown,
 ): AsyncIterableIterator<T> {
   let next = await iterable.next();
-  while (predicate(next.value) && !next.done) {
+  while (!next.done && predicate(next.value)) {
     yield next.value;
     next = await iterable.next();
   }
