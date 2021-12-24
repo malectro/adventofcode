@@ -28,23 +28,30 @@ for (const [i, line] of lines.entries()) {
 
 type MemoryAddress = 'w' | 'x' | 'y' | 'z';
 
+let memory: Record<MemoryAddress, number> = {
+  w: 0,
+  x: 0,
+  y: 0,
+  z: 0,
+};
 for (const instructions of program.slice(0, 1)) {
-  let max = 1;
+  let max = 0;
+  let bestMemory;
   for (const digit of range(1, 10)) {
-    const memory: Record<MemoryAddress, number> = {
-      w: 0,
-      x: 0,
-      y: 0,
-      z: 0,
-    };
+    const freshMemory = structuredClone(memory);
     console.log('trying digit', digit);
     for (const instruction of instructions) {
       const [command, a, b] = instruction.split(' ');
 
-      const addr: MemoryAddress = a in memory ? a as MemoryAddress : 'w';
+      const addr: MemoryAddress = a in memory ? (a as MemoryAddress) : 'w';
       const p1 = memory[addr];
 
-      const p2 = b != null ? (b in memory ? memory[b as MemoryAddress] : parseInt(b)) : 0;
+      const p2 =
+        b != null
+          ? b in memory
+            ? memory[b as MemoryAddress]
+            : parseInt(b)
+          : 0;
 
       switch (command) {
         case 'inp':
@@ -71,10 +78,19 @@ for (const instructions of program.slice(0, 1)) {
       console.log(instruction, memory);
     }
     if (memory.z === 0) {
-      max = Math.max(digit, max);
+      if (digit > max) {
+        max = digit;
+        bestMemory = memory;
+      }
     }
   }
   digits.push(max);
+
+  if (bestMemory) {
+    memory = bestMemory;
+  } else {
+    throw new Error('no input value works');
+  }
 }
 
 console.log('digits', digits);
