@@ -39,6 +39,15 @@ const directions = [
   {x: 0, y: -1},
 ];
 
+const hallLocations = {
+  A: 2,
+  B: 4,
+  C: 6,
+  D: 8,
+};
+
+const hallLocationsSet = new Set(Object.values(hallLocations));
+
 interface Point {
   x: number;
   y: number;
@@ -131,7 +140,7 @@ function playGame(game: Game): number {
     //steps++;
 
     const {game, energy} = item;
-    console.log('resolving', serializeGame(game));
+    //console.log('resolving', serializeGame(game));
 
     if (isGameOver(game)) {
       return energy;
@@ -141,12 +150,7 @@ function playGame(game: Game): number {
     for (const row of game) {
       for (const tile of row) {
         if ('value' in tile && tile.value) {
-          if (
-            !(
-              tile.type === 'room' &&
-              isTileDone(game, tile)
-            )
-          ) {
+          if (!(tile.type === 'room' && isTileDone(game, tile))) {
             playableTiles.push(tile);
           }
         }
@@ -161,11 +165,19 @@ function playGame(game: Game): number {
 
       let possibleMoves = getMoveableTiles(game, tile);
       if (isInRoom) {
-        possibleMoves = possibleMoves.filter(({tile}) => tile.type === 'hall');
+        possibleMoves = possibleMoves.filter(
+          ({tile}) =>
+            tile.type === 'hall' && !hallLocationsSet.has(tile.position.x),
+        );
       } else {
         //console.log('looking at hall tile', tile.value);
         const roomTiles = getRoomTiles(game, tile.value);
-        if (roomTiles.some((roomTile) => roomTile.value != null && roomTile.value !== roomTile.name)) {
+        if (
+          roomTiles.some(
+            (roomTile) =>
+              roomTile.value != null && roomTile.value !== roomTile.name,
+          )
+        ) {
           possibleMoves = [];
         } else {
           possibleMoves = possibleMoves.filter(
@@ -211,7 +223,7 @@ function playGame(game: Game): number {
   console.log('next game', gamesToPlay.next().energy);
   */
 
- throw new Error('failed to find a solution');
+  throw new Error('failed to find a solution');
 }
 
 function isGameOver(grid: Game): boolean {
@@ -295,7 +307,8 @@ function getDistance(point1: Point, point2: Point): number {
 }
 
 function isRoomComplete(game: Game, tile: RoomTile): boolean {
-  let otherTile = tile.position.y === 3 ? game[2][tile.position.x] : game[3][tile.position.x];
+  let otherTile =
+    tile.position.y === 3 ? game[2][tile.position.x] : game[3][tile.position.x];
   return tile.name === tile.value && otherTile.name === tile.value;
 }
 
@@ -309,7 +322,6 @@ function isTileDone(game: Game, tile: RoomTile): boolean {
 
   return tileDone;
 }
-
 
 /*
 
@@ -466,4 +478,3 @@ C
 
 
 */
-
