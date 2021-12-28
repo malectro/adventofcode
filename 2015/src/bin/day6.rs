@@ -34,41 +34,21 @@ fn main() {
       },
     };
 
-    /*
-    println!("{}", line);
-    println!("{}", &captured["command"]);
-    */
-
     let mut new_rects = Vec::new();
-    let mut toggle_rects = vec![new_rect];
+    let mut intersections = Vec::new();
     for rect in rects {
-      let mut intersected = false;
-      let mut new_toggle_rects = Vec::new();
-      for new_rect in toggle_rects {
-        if let Some(intersection) = get_intersection(&rect, &new_rect) {
-          intersected = true;
-          new_rects.extend(
-            split_rect(&rect, &intersection)
-              .into_iter()
-              .filter(|r| *r != intersection),
-          );
-          if captured["command"] == *"toggle" {
-            new_toggle_rects.extend(
-              split_rect(&new_rect, &intersection)
-                .into_iter()
-                .filter(|r| *r != intersection),
-            );
-          } else {
-            new_toggle_rects.push(new_rect);
-          }
-        } else {
-          new_toggle_rects.push(new_rect);
+      if let Some(intersection) = get_intersection(&rect, &new_rect) {
+        new_rects.extend(
+          split_rect(&rect, &intersection)
+            .into_iter()
+            .filter(|r| *r != intersection),
+        );
+        if captured["command"] == *"toggle" {
+          intersections.push(intersection);
         }
-      }
-      if !intersected {
+      } else {
         new_rects.push(rect);
       }
-      toggle_rects = new_toggle_rects;
     }
 
     match &captured["command"] {
@@ -76,12 +56,28 @@ fn main() {
         new_rects.push(new_rect);
       }
       "toggle" => {
-        new_rects.append(&mut toggle_rects);
+        // break down the rect
+        let mut rects = vec![new_rect];
+        for intersection in intersections {
+          let mut split_rects = Vec::new();
+          for rect in rects {
+            if let Some(new_intersection) = get_intersection(&rect, &intersection) {
+              split_rects.extend(
+                split_rect(&rect, &new_intersection)
+                  .into_iter()
+                  .filter(|r| *r != new_intersection),
+              );
+            } else {
+              split_rects.push(rect);
+            }
+          }
+          rects = split_rects;
+        }
+
+        new_rects.append(&mut rects);
       }
       _ => {}
     }
-
-    //println!("new_rects {:?}", new_rects);
 
     rects = new_rects;
   }
