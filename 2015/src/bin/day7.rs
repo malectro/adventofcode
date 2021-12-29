@@ -55,7 +55,9 @@ fn main() {
   let mut wires: HashMap<String, usize> = HashMap::new();
 
   while let Some(connection) = connections.pop_front() {
-    if let (Some(wire1), Some(wire2)) = (
+    if connection.destination == "b" {
+        wires.insert("b".to_string(), 16076);
+    } else if let (Some(wire1), Some(wire2)) = (
       get_wire_value(&wires, &connection.inputs.0),
       get_wire_value(&wires, &connection.inputs.1),
     ) {
