@@ -34,10 +34,10 @@ fn main() {
   }
 
   let mut visited = HashSet::new();
-  let mut shortest: usize = usize::MAX;
+  let mut shortest: usize = 0;
   for (_, id) in places {
     let distance = get_shortest_distance(&distances, &mut visited, id);
-    if distance < shortest {
+    if distance > shortest {
       shortest = distance;
     }
   }
@@ -67,7 +67,7 @@ fn get_shortest_distance(
   for (id, distance) in distances[start].iter().enumerate() {
     if !visited.contains(&id) {
       let total = distance + get_shortest_distance(distances, visited, id);
-      if !got_one || total < shortest {
+      if !got_one || total > shortest {
         shortest = total;
         got_one = true;
       }
