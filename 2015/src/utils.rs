@@ -5,6 +5,20 @@ struct Cli {
   path: std::path::PathBuf,
 }
 
+pub fn read_file(path_str: &str) -> BufReader<File> {
+  let path = std::path::PathBuf::from(path_str);
+  let file = File::open(&path).expect("could not open file");
+  BufReader::new(file)
+}
+
+pub fn read_file_lines(path: &str) -> impl std::iter::Iterator<Item = String> {
+  let reader = read_file(path);
+
+  reader
+    .lines()
+    .map(|line| line.expect("failed to read line"))
+}
+
 pub fn read_input_file() -> BufReader<File> {
   let path = std::env::args().nth(1).expect("no path given");
   let args = Cli {
