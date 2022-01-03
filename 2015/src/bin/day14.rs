@@ -48,4 +48,30 @@ fn main() {
   });
 
   println!("max reindeer distance: {}", max_distance);
+
+  let mut scores = vec![0usize; reindeers.len()];
+  let mut distances = vec![0usize; reindeers.len()];
+  for i in 0..total_time {
+    for reindeer in reindeers.iter() {
+      let period = reindeer.stamina + reindeer.recovery;
+      let moment = i % period;
+      if moment < reindeer.stamina {
+        distances[reindeer.id] += reindeer.speed;
+      }
+    }
+
+    let max_distance = *distances.iter().fold(&0, std::cmp::max);
+
+    for (id, distance) in distances.iter().enumerate() {
+      if *distance == max_distance {
+        scores[id] += 1;
+      }
+    }
+  }
+
+  let best_distance = distances.into_iter().fold(0, std::cmp::max);
+  println!("best reindeer distance: {}", best_distance);
+
+  let best_score = scores.into_iter().fold(0, std::cmp::max);
+  println!("best reindeer score: {}", best_score);
 }
