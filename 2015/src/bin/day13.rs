@@ -1,7 +1,8 @@
 use regex::Regex;
-use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use utils;
 
+#[derive(Clone)]
 struct Edge {
   guest: usize,
   other_guest: usize,
@@ -65,7 +66,31 @@ fn main() {
     })
     .collect();
 
-  let mut amounts = vec![vec![0isize; guests.len()]; guests.len()];
+  println!("best score {}", get_best_score(&edges, guests.len()));
+
+  let myself = guests.len();
+  let mut new_edges = edges.clone();
+  for guest in 0..myself {
+    new_edges.push(Edge {
+      guest: myself,
+      other_guest: guest,
+      amount: 0,
+    });
+    new_edges.push(Edge {
+      guest: guest,
+      other_guest: myself,
+      amount: 0,
+    });
+  }
+
+  println!(
+    "best score with me {}",
+    get_best_score(&new_edges, guests.len() + 1)
+  );
+}
+
+fn get_best_score(edges: &Vec<Edge>, guest_count: usize) -> isize {
+  let mut amounts = vec![vec![0isize; guest_count]; guest_count];
   for edge in edges {
     amounts[edge.guest][edge.other_guest] = edge.amount;
   }
@@ -73,7 +98,7 @@ fn main() {
   let mut max = 0;
 
   for start in 0..amounts.len() {
-    let mut totals = vec![0isize; guests.len()];
+    let mut totals = vec![0isize; guest_count];
 
     // NOTE (kyle): using a heap here to be "more efficient", but we're exhausting
     // all options so a VecDeque would be just as good.
@@ -110,7 +135,7 @@ fn main() {
     }
   }
 
-  println!("best score {}", max);
+  max
 }
 
 fn get_score(scores: &Vec<Vec<isize>>, guest1: usize, guest2: usize) -> isize {
