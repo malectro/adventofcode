@@ -21,13 +21,6 @@ fn main() {
           .parse::<isize>()
           .expect("Invalid prop number")
       });
-
-      /*
-      let mut props_array = [0isize; 4];
-      for (i, prop) in props.take(4).enumerate() {
-        props_array[i] = prop;
-      }
-      */
       let props_array = to_props(props);
 
       Ingredient {
@@ -40,31 +33,13 @@ fn main() {
 
   println!("ingredients {:?}", ingredients);
 
-  // brute force
   let max_score = get_max_2(&ingredients, 100);
   println!("max score: {}", get_score(&max_score));
-
-  println!(
-    "{} {}",
-    get_score(&[-100, -200, 600, 300]),
-    get_score(&[200, 300, -200, -100])
-  );
 }
 
 fn get_max_2(ingredients: &Vec<Ingredient>, amount: usize) -> [isize; 4] {
   let mut recipe = [0isize; 4];
   let mut counts = vec![0usize; ingredients.len()];
-
-  let max_ingredient = ingredients
-    .iter()
-    .reduce(|acc, ingredient| {
-      if get_sum(&ingredient.props) > get_sum(&acc.props) {
-        ingredient
-      } else {
-        acc
-      }
-    })
-    .expect("Must have one");
 
   let mut count = 0;
   while count < amount {
@@ -88,71 +63,17 @@ fn get_max_2(ingredients: &Vec<Ingredient>, amount: usize) -> [isize; 4] {
       .iter()
       .enumerate()
       .map(|(i, ingredient)| (i, get_score(add(&mut recipe.clone(), &ingredient.props))))
-      .reduce(|acc, entry| {
-        if entry.1 > acc.1 {
-          entry
-        } else {
-          acc
-        }
-      }).expect("Ingredients are empty");
+      .reduce(|acc, entry| if entry.1 > acc.1 { entry } else { acc })
+      .expect("Ingredients are empty");
 
     add(&mut recipe, &ingredients[i].props);
     count += 1;
     counts[i] += 1;
-
-    /*
-    let possible_maxes: Vec<(usize, isize)> = ingredients
-      .iter()
-      .map(|ingredient| get_score(add(&mut recipe.clone(), &ingredient.props)))
-      .collect();
-          */
-
-    /*
-    if !did_add {
-      add(&mut recipe, &max_ingredient.props);
-      counts[0] += 1;
-      count += 1;
-    }
-    did_add = false;
-    */
   }
-
-  let possible_maxes: Vec<isize> = ingredients
-    .iter()
-    .map(|ingredient| get_score(add(&mut recipe.clone(), &ingredient.props)))
-    .collect();
 
   println!("counts {:?}", counts);
-  println!("possible maxes {:?}", possible_maxes);
 
   recipe
-}
-
-fn get_max(ingredients: &Vec<Ingredient>, amount: usize) -> [isize; 4] {
-  let mut max = [0isize; 4];
-
-  if amount == 0 {
-    return max;
-  }
-
-  let mut max_score = 0;
-
-  let best = get_max(ingredients, amount - 1);
-  for ingredient in ingredients {
-    let candidate: Vec<isize> = best
-      .iter()
-      .zip(ingredient.props)
-      .map(|(a, b)| a + b)
-      .collect();
-    let score = get_score(candidate.as_slice());
-
-    if score > max_score {
-      max = to_props(candidate.into_iter());
-      max_score = score;
-    }
-  }
-
-  max
 }
 
 fn get_score(props: &[isize]) -> isize {
