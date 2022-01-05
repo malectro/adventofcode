@@ -7,29 +7,44 @@ fn main() {
     .map(|line| line.parse().expect("Invalid container size"))
     .collect();
 
-  println!(
-    "permutation count: {}",
-    get_permutation_count(&containers, 0, amount)
-  );
-}
+  let mut valid_combos = Vec::new();
+  let mut tries = vec![(Vec::new(), amount, 0)];
 
-fn get_permutation_count(containers: &Vec<usize>, index: usize, amount: usize) -> usize {
-  if amount == 0 {
-    return 1;
-  } else if index == containers.len() {
-    return 0;
+  while let Some((combo, amount, index)) = tries.pop() {
+    if amount == 0 {
+      valid_combos.push(combo);
+      continue;
+    } else if index == containers.len() {
+      continue;
+    }
+
+    let size = containers[index];
+
+    if size <= amount {
+      let mut new_combo = combo.clone();
+      new_combo.push(size);
+      tries.push((new_combo, amount - size, index + 1));
+    }
+    tries.push((combo, amount, index + 1));
   }
 
-  let mut count = 0;
+  println!("permutation count: {}", valid_combos.len());
 
-  //println!("getting permutations for index {} and amount {}", index, amount);
+  let minimum_containers = valid_combos.iter().fold(usize::MAX, |acc, combo| {
+    if combo.len() < acc {
+      combo.len()
+    } else {
+      acc
+    }
+  });
 
-  let size = containers[index];
+  let total_minimum_combos = valid_combos.iter().fold(0, |acc, combo| {
+    if combo.len() == minimum_containers {
+      acc + 1
+    } else {
+      acc
+    }
+  });
 
-  let possibles = if size > amount { 1 } else { 2 };
-  for multiple in 0..possibles {
-    count += get_permutation_count(containers, index + 1, amount - multiple * size);
-  }
-
-  count
+  println!("minimum permutation count: {}", total_minimum_combos);
 }
