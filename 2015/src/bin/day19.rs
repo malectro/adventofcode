@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::collections::HashSet;
 use utils;
 
@@ -25,7 +26,7 @@ fn main() {
 
   let mut molecules: HashSet<String> = HashSet::new();
 
-  for rule in rules {
+  for rule in rules.iter() {
     for (i, _) in medicine.match_indices(&rule.from) {
       let j = i + rule.from.len();
       molecules.insert(format!("{}{}{}", &medicine[0..i], rule.to, &medicine[j..]));
@@ -33,4 +34,18 @@ fn main() {
   }
 
   println!("number of molecules: {}", molecules.len());
+
+  let re = Regex::new(r"[A-Z][a-z]*").expect("Invalid Regex");
+  let elements = re.find_iter(&medicine).map(|matches| matches.as_str());
+
+  let step_count = elements.fold(0, |acc, element| {
+    acc
+      + match element {
+        "Rn" | "Ar" => 0,
+        "Y" => -1,
+        _ => 1,
+      }
+  }) - 1;
+
+  println!("shortest trip: {}", step_count);
 }
