@@ -71,11 +71,7 @@ Defense +3   80     0       3",
   );
 
   let mut best_player = None;
-
-  let mut player = base_player.clone();
-  let mut boss = base_boss.clone();
-  let winner = fight(&mut player, &mut boss);
-  println!("winner {:?}", winner);
+  let mut worst_player = None;
 
   let armor_store = make_store(&armors);
   let ring_store = make_store(&rings);
@@ -112,8 +108,18 @@ Defense +3   80     0       3",
 
               let cost = get_player_cost(&player);
               if other_score > cost {
-                println!("it's better {:?} {}", player, cost);
                 best_player = Some(player);
+              }
+            } else {
+              let other_score = if let Some(other_player) = &worst_player {
+                get_player_cost(other_player)
+              } else {
+                0
+              };
+
+              let cost = get_player_cost(&player);
+              if other_score < cost {
+                worst_player = Some(player);
               }
             }
           }
@@ -124,6 +130,9 @@ Defense +3   80     0       3",
 
   if let Some(player) = best_player {
     println!("best fighter {:?} {}", player, get_player_cost(&player));
+  }
+  if let Some(player) = worst_player {
+    println!("worst fighter {:?} {}", player, get_player_cost(&player));
   }
 }
 
@@ -175,7 +184,6 @@ fn parse_items(string: &str) -> Vec<Item> {
 }
 
 fn parse_item(string: &str) -> Item {
-  println!("hi {}", string);
   lazy_static! {
     static ref RE: Regex = Regex::new(r"^(.+) +(\d+) +(\d+) +(\d+)$").unwrap();
   }
