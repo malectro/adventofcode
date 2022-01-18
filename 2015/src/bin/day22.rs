@@ -49,6 +49,15 @@ struct Fighter {
 
 fn main() {
   let spells = [
+      /*
+    Spell {
+      id: 0,
+      name: "Wait".to_string(),
+      duration: 0,
+      mana_cost: 0,
+      effects: vec![],
+    },
+      */
     Spell {
       id: 1,
       name: "Magic Missile".to_string(),
@@ -122,7 +131,7 @@ fn main() {
   let player = Fighter {
     id: 1,
     name: "Player".to_string(),
-    hp: 50,
+    hp: 50 - 1,
     armor: 0,
     damage: 0,
     mana: 500,
@@ -139,17 +148,25 @@ fn main() {
     statuses: vec![],
   };
 
-  if let Some(lowest_cost) = fight(&spells, 1, player, boss) {
+  if let Some(lowest_cost) = fight(&spells, vec![], 1, player, boss) {
     println!("lowest cost: {}", lowest_cost);
   }
 }
 
-fn fight(spells: &[Spell], turn: usize, player: Fighter, boss: Fighter) -> Option<usize> {
+fn fight(
+  spells: &[Spell],
+  spells_cast: Vec<Spell>,
+  turn: usize,
+  player: Fighter,
+  boss: Fighter,
+) -> Option<usize> {
+  //println!("player {}, boss {}", player.hp, boss.hp);
   if player.hp == 0 {
     return None;
   }
 
   if boss.hp == 0 {
+    //print_spells(&spells_cast);
     return Some(0);
   }
 
@@ -166,6 +183,9 @@ fn fight(spells: &[Spell], turn: usize, player: Fighter, boss: Fighter) -> Optio
       let mut current_turn = turn;
       let mut next_player = player.clone();
       let mut next_boss = boss.clone();
+      let mut next_spells = spells_cast.clone();
+
+      next_spells.push(spell.clone());
 
       if spell.duration == 0 {
         for effect in spell.effects.iter() {
@@ -182,38 +202,47 @@ fn fight(spells: &[Spell], turn: usize, player: Fighter, boss: Fighter) -> Optio
         });
       }
       next_player.mana = sub_to_zero(next_player.mana, spell.mana_cost);
+      /*
+      if next_boss.hp == 0 {
+        return Some(spell.mana_cost);
+      }
+      */
 
       current_turn += 1;
       apply_longterm_spells(current_turn, &mut next_player, &mut next_boss);
 
-      if next_boss.hp > 0 {
-        // TODO (kyle): shield special case
-        let buff_armor = next_boss.statuses.iter().fold(0, |acc, status| {
-          status.spell.effects.iter().fold(acc, |acc, effect| {
-            if effect.is_buff {
-              effect.value + acc
-            } else {
-              acc
-            }
-          })
-        });
-        let armor: usize = match next_player.armor as isize + buff_armor {
-          armor if armor < 0 => 0,
-          armor => armor as usize,
-        };
-
-        let damage = if next_boss.damage > armor {
-          next_boss.damage - armor
-        } else {
-          1
-        };
-        next_player.hp = sub_to_zero(next_player.hp, damage);
+      if next_boss.hp == 0 {
+        //print_spells(&next_spells);
+        return Some(spell.mana_cost);
       }
 
+      // TODO (kyle): shield special case
+      let buff_armor = next_boss.statuses.iter().fold(0, |acc, status| {
+        status.spell.effects.iter().fold(acc, |acc, effect| {
+          if effect.is_buff {
+            effect.value + acc
+          } else {
+            acc
+          }
+        })
+      });
+      let armor: usize = match next_player.armor as isize + buff_armor {
+        armor if armor < 0 => 0,
+        armor => armor as usize,
+      };
+
+      let damage = if next_boss.damage > armor {
+        next_boss.damage - armor
+      } else {
+        1
+      };
+      next_player.hp = sub_to_zero(next_player.hp, damage);
+
       current_turn += 1;
+      next_player.hp = sub_to_zero(next_player.hp, 1);
       apply_longterm_spells(current_turn, &mut next_player, &mut next_boss);
 
-      if let Some(cost) = fight(spells, current_turn, next_player, next_boss) {
+      if let Some(cost) = fight(spells, next_spells, current_turn, next_player, next_boss) {
         let total_cost = Some(cost + spell.mana_cost);
         if lowest_cost == None || total_cost < lowest_cost {
           lowest_cost = total_cost;
@@ -234,10 +263,6 @@ fn apply_effect(fighter: &mut Fighter, effect: &Effect) {
 }
 
 fn apply_longterm_spells<'a>(turn: usize, player: &'a mut Fighter, boss: &'a mut Fighter) {
-  boss
-    .statuses
-    .retain(|status| turn - status.created_at <= status.spell.duration);
-
   // TODO (kyle): this feels silly
   for status in boss.statuses.clone().iter() {
     for effect in status.spell.effects.iter() {
@@ -251,6 +276,10 @@ fn apply_longterm_spells<'a>(turn: usize, player: &'a mut Fighter, boss: &'a mut
       }
     }
   }
+
+  boss
+    .statuses
+    .retain(|status| turn - status.created_at < status.spell.duration);
 }
 
 fn add_to_zero(a: usize, b: isize) -> usize {
@@ -268,4 +297,17 @@ fn sub_to_zero(a: usize, b: usize) -> usize {
   } else {
     a - b
   }
+}
+
+fn print_spells(spells_cast: &[Spell]) {
+  println!(
+    "victory! {} {:?}",
+    spells_cast
+      .iter()
+      .fold(0, |acc, spell| acc + spell.mana_cost),
+    spells_cast
+      .iter()
+      .map(|spell| spell.name.clone())
+      .collect::<Vec<String>>()
+  );
 }
