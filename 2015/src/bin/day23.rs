@@ -1,7 +1,7 @@
 use utils;
 
 fn main() {
-  let mut reg = [0, 0];
+  let mut reg = [1, 0];
 
   let instructions: Vec<String> = utils::read_input_file_lines().collect();
 
