@@ -12,7 +12,7 @@ fn main() {
   );
 
   let mut best = (usize::MAX, usize::MAX);
-  let goal_weight = get_weight(&packages) / 3;
+  let goal_weight = get_weight(&packages) / 4;
 
   for group in Permutations::of(packages.clone()) {
     if group.len() <= best.0 && get_weight(&group) == goal_weight {
