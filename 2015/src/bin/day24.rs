@@ -6,9 +6,38 @@ fn main() {
     .map(|line| line.parse().expect("Invalid package"))
     .collect();
 
+  println!(
+    "{:?}",
+    Permutations::of(vec![1, 2, 3]).collect::<Vec<Vec<usize>>>(),
+  );
+
+  let mut best = (usize::MAX, usize::MAX);
+  let goal_weight = get_weight(&packages) / 3;
+
+  for group in Permutations::of(packages.clone()) {
+    if group.len() <= best.0 && get_weight(&group) == goal_weight {
+      let group_set: HashSet<usize> = group.iter().cloned().collect();
+      let rest: Vec<usize> = packages
+        .iter()
+        .cloned()
+        .filter(|value| !group_set.contains(value))
+        .collect();
+      if Permutations::of(rest).any(|group| get_weight(&group) == goal_weight) {
+          println!("winner! {:?}", group);
+        let score = (group.len(), get_score(&group));
+        if score < best {
+          best = score;
+        }
+      }
+    }
+  }
+
+  println!("best {:?}", best);
+
   //let groups = [Vec::new(), Vec::new(), Vec::new()];
 
   //if let Some((_, score)) = arrange(get_weight(&packages) / 3, packages, groups, None) {
+  /*
   if let Some((_, score)) = arrange2(
     &mut HashMap::new(),
     get_weight(&packages) / 3,
@@ -17,6 +46,7 @@ fn main() {
   ) {
     println!("Success {}", score);
   }
+  */
 }
 
 fn arrange(
@@ -163,6 +193,10 @@ fn get_weight(group: &Vec<usize>) -> usize {
   group.iter().fold(0, |acc, value| acc + value)
 }
 
+fn get_score(group: &Vec<usize>) -> usize {
+  group.iter().fold(1, |acc, value| acc * value)
+}
+
 fn abs_diff(a: usize, b: usize) -> usize {
   if a > b {
     a - b
@@ -171,6 +205,7 @@ fn abs_diff(a: usize, b: usize) -> usize {
   }
 }
 
+/*
 fn permutations(v: Vec<usize>) {
   let result = Vec::new();
 
@@ -191,30 +226,52 @@ fn permutations(v: Vec<usize>) {
 }
 
 fn permutations2(v: &Vec<usize>) {}
+*/
 
 struct Permutations {
   //vector: Vec<usize>,
-  value: usize,
-  sub_iter: impl std::iter::Iterator<Item = usize>,
+  value: Option<usize>,
+  append_to: Option<Vec<usize>>,
+  sub_iter: Box<Option<Permutations>>,
 }
 
 impl Permutations {
-  fn of(v: Vec<usize>) -> impl std::iter::Iterator<Item = usize> {
-    if let Some(value) = v.pop() {
-      Permutations {
-        value,
-        sub_iter: Permutations::of(v),
-      }
-    } else {
-      std::iter::empty()
+  fn of(mut v: Vec<usize>) -> Permutations {
+    let value = v.pop();
+    Permutations {
+      value,
+      append_to: None,
+      sub_iter: Box::new(if v.len() > 0 {
+        Some(Permutations::of(v))
+      } else {
+        None
+      }),
     }
   }
 }
 
 impl Iterator for Permutations {
+  type Item = Vec<usize>;
   fn next(&mut self) -> Option<Vec<usize>> {
-    if let Some(value) = self.vector.pop() {}
+    if let Some(value) = self.value {
+      if let Some(mut append_to) = self.append_to.take() {
+        append_to.push(value);
+        return Some(append_to);
+      }
 
+      // TODO (kyle): i shouldn't have to _take_ this?
+      if let Some(mut sub_iter) = self.sub_iter.take() {
+        if let Some(permutation) = sub_iter.next() {
+          self.append_to = Some(permutation.clone());
+          self.sub_iter = Box::new(Some(sub_iter));
+          return Some(permutation);
+        }
+
+        self.sub_iter = Box::new(Some(sub_iter));
+      }
+      self.value = None;
+      return Some(vec![value]);
+    }
     None
   }
 }
