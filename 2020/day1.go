@@ -14,29 +14,58 @@ func main() {
 		numbers = append(numbers, number)
     }
 
-	var pair [2]uint64
-	for next, hasMore := permutations(numbers); hasMore; pair, hasMore = next() {
-		if pair[0] + pair[1] == 2020 {
-			fmt.Println(pair[0], pair[1], pair[0] * pair[1])
+	var pair []uint64
+	for next, hasMore := permutations(numbers, 3); hasMore; pair, hasMore = next() {
+		if sum(pair) == 2020 {
+			fmt.Println(product(pair))
 		}
 	}
 }
 
-func permutations(slice []uint64) (func () ([2]uint64, bool), bool) {
-	i, j := 0, 0
+func permutations(slice []uint64, size uint) (func () ([]uint64, bool), bool) {
+	indices := make([]int, size)
+	permutation := make([]uint64, size)
 	l := len(slice)
 
-	return func () ([2]uint64, bool) {
-		j += 1
-		
-		if j == l {
-		  i += 1
-		  j = i + 1
+	for i := range indices {
+		indices[i] = i
+	}
+
+	return func () ([]uint64, bool) {
+		index := int(size) - 1
+
+		indices[index] += 1
+
+		for indices[index] > l - (int(size) - 1 - index) - 1 && index > 0 {
+		  indices[index - 1] += 1
+		  for i := index; i < int(size); i += 1 {
+		  	indices[i] = indices[i - 1] + 1
+		  }
+		  index -= 1
 		}
 
-		hasMore := i < l - 2
-		a, b := slice[i], slice[j]
+		hasMore := indices[0] < l - int(size)
 
-		return [2]uint64{a, b}, hasMore
-	}, l > 1
+		for i, index := range indices {
+			permutation[i] = slice[index]
+		}
+
+		return permutation, hasMore
+	}, l >= int(size)
+}
+
+func sum(slice []uint64) uint64 {
+	var result uint64 = 0
+	for _, number := range slice {
+		result += number
+	}
+	return result
+}
+
+func product(slice []uint64) uint64 {
+	var result uint64 = 1
+	for _, number := range slice {
+		result *= number
+	}
+	return result
 }
