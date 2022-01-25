@@ -10,6 +10,7 @@ func main() {
 	re := regexp.MustCompile(`^(\d+)-(\d+) ([^:]+): (.+)$`)
 
 	totalValid := 0
+	totalValid2 := 0
 
 	s := bufio.NewScanner(os.Stdin)
     for s.Scan() {
@@ -32,7 +33,13 @@ func main() {
 		if count >= min && count <= max {
 			totalValid += 1
 		}
+
+		a, b := password[min - 1], password[max - 1]
+		if (c == a || c == b) && a != b {
+			totalValid2 += 1
+		}
     }
 
-	fmt.Println("total", totalValid)
+	fmt.Println("total for part 1", totalValid)
+	fmt.Println("total for part 2", totalValid2)
 }
