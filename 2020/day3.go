@@ -4,19 +4,45 @@ import "fmt"
 import "bufio"
 import "os"
 
+type Path struct {
+	x int;
+	y int;
+}
+
 func main() {
-	total := 0
-	x := 0
+	area := make([]string, 0)
 
 	s := bufio.NewScanner(os.Stdin)
     for s.Scan() {
-		row := s.Text()
-		if row[x] == '#' {
-			total += 1
-		}
-		x = (x + 3) % len(row)
+		area = append(area, s.Text())
 	}
 
-	fmt.Println(total)
+	product := 1
+	for _, path := range []Path {
+		Path{x: 1, y: 1},
+		Path{x: 3, y: 1},
+		Path{x: 5, y: 1},
+		Path{x: 7, y: 1},
+		Path{x: 1, y: 2},
+	} {
+		product *= countTrees(&area, &path)
+		fmt.Println(path, countTrees(&area, &path))
+	}
+	fmt.Println(product)
 }
 
+func countTrees(area *[]string, path *Path) int {
+	x, y := 0, 0
+	total := 0
+
+	for y < len(*area) {
+	  row := (*area)[y]
+	  if row[x] == '#' {
+		total += 1
+	  }
+	  x = (x + path.x) % len(row)
+	  y += path.y
+	}
+
+	return total
+}
