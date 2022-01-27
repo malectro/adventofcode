@@ -7,6 +7,8 @@ import "os"
 func main() {
 	maxId := 0
 
+	seats := make([]bool, 128 * 8)
+
 	s := bufio.NewScanner(os.Stdin)
     for s.Scan() {
 		seatCode := s.Text()
@@ -42,7 +44,23 @@ func main() {
 		if id > maxId {
 			maxId = id
 		}
+
+		seats[id] = true
 	}
 
-	fmt.Println(maxId)
+	fmt.Println("max id", maxId)
+
+	myId := 0
+	foundSeat := false
+	for id, taken := range seats {
+		if taken && !foundSeat {
+			foundSeat = true
+		}
+		if !taken && foundSeat {
+			myId = id
+			break;
+		}
+	}
+
+	fmt.Println("my id", myId)
 }
