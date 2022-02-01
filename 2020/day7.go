@@ -52,8 +52,11 @@ func main() {
 		}
 	}
 
-	//fmt.Println(bags)
-	fmt.Println(total)
+	fmt.Println("part 1", total)
+
+	bagCounts := map[string]int{}
+	count := countBags(&bags, &bagCounts, goal)
+	fmt.Println("part 2", count)
 }
 
 func resolveBag(bags *map[string]Bag, results *map[string]bool, goal string, bag *Bag) bool {
@@ -75,4 +78,23 @@ func resolveBag(bags *map[string]Bag, results *map[string]bool, goal string, bag
 
 	(*results)[bag.name] = hasGoal
 	return hasGoal
+}
+
+func countBags(bags *map[string]Bag, results *map[string]int, bagName string) int {
+	cached, hasValue := (*results)[bagName]
+
+	if hasValue {
+		return cached
+	}
+
+	count := 0
+
+	bag := (*bags)[bagName]
+	for _, edge := range bag.children {
+		count += edge.count * (1 + countBags(bags, results, edge.bagName))
+	}
+
+	(*results)[bagName] = count
+
+	return count
 }
