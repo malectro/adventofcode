@@ -1,0 +1,17 @@
+[package]
+name = "aoc_2022"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "utils"
+path = "src/utils.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+md-5 = "0.10.0"
+itertools = "0.10"
+regex = "1.5.4"
+json = "0.12.4"
+lazy_static = "1.4.0"
