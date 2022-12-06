@@ -1,0 +1,32 @@
+use utils;
+
+fn main() {
+  part1();
+}
+
+fn part1() {
+  let lines = utils::read_input_file_lines();
+
+  let mut count = 0;
+
+  for line in lines {
+    let (left, right) = line.split_once(",").expect("Invalid line");
+    let elf1 = parse_elf(left);
+    let elf2 = parse_elf(right);
+
+    if contains(elf1, elf2) || contains(elf2, elf1) {
+      count += 1;
+    }
+  }
+
+  println!("overlap count {}", count);
+}
+
+fn parse_elf(str: &str) -> [usize; 2] {
+  let stuff = str.split_once("-").unwrap();
+  return [stuff.0.parse().unwrap(), stuff.1.parse().unwrap()];
+}
+
+fn contains(elf1: [usize; 2], elf2: [usize; 2]) -> bool {
+  return elf1[0] <= elf2[0] && elf1[1] >= elf2[1];
+}
