@@ -1,5 +1,5 @@
-import { TextLineStream } from "https://deno.land/std@0.208.0/streams/mod.ts";
 import { enumerate } from './iter.ts';
+import { streamInputLines } from './util.ts';
 
 const totals = {
   red: 12,
@@ -9,13 +9,9 @@ const totals = {
 
 const maxes = {...totals};
 
-const lines = Deno.stdin.readable.pipeThrough(
-  new TextDecoderStream(),
-).pipeThrough(new TextLineStream);
-
 let part1 = 0;
 let part2 = 0;
-for await (const [i, line] of enumerate(lines)) {
+for await (const [i, line] of enumerate(streamInputLines())) {
   for (const key of Object.keys(maxes)) {
     maxes[key] = 0;
   }
