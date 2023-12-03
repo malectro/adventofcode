@@ -118,7 +118,7 @@ export async function toArray<T>(
 
 export async function* reChunk<C>(
   iterable: AsyncIterableIterator<C>,
-  handler: (newChunk: C, item: C) => {chunk: C | null; buffer: C},
+  handler: (newChunk: C, item: C) => { chunk: C | null; buffer: C },
   initial: C,
 ) {
   let buffer = initial;
@@ -143,7 +143,7 @@ export function chunkLines(iter: AsyncIterableIterator<string>) {
   return reChunk(
     iter,
     (newChunk, item) => {
-      const index = item.indexOf('\n');
+      const index = item.indexOf("\n");
 
       if (index >= 0) {
         return {
@@ -157,7 +157,7 @@ export function chunkLines(iter: AsyncIterableIterator<string>) {
         buffer: newChunk + item,
       };
     },
-    '',
+    "",
   );
 }
 
@@ -209,7 +209,9 @@ export function clamp(number: number, floor: number, ceiling: number): number {
   return Math.max(Math.min(number, ceiling), floor);
 }
 
-export async function* enumerate<T>(iter: AsyncIterableIterator<T>): AsyncIterableIterator<[number, T]> {
+export async function* enumerate<T>(
+  iter: AsyncIterableIterator<T>,
+): AsyncIterableIterator<[number, T]> {
   let i = 0;
   for await (const item of iter) {
     yield [i, item];
