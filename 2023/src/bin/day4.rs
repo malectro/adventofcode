@@ -39,8 +39,7 @@ fn part1() {
       part1_total += score;
     }
 
-    let multiplier = multipliers.iter().fold(0, |acc, pair| pair.1 + acc);
-    let card_count = 1 + multiplier; 
+    let card_count = 1 + multipliers.iter().fold(0, |acc, pair| pair.1 + acc);
     part2_total += card_count;
 
     for count in multipliers.iter_mut() {
