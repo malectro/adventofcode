@@ -13,7 +13,10 @@ fn main() {
 }
 
 fn part1() {
-  let mut total = 0;
+  let mut part1_total = 0;
+  let mut part2_total = 0;
+
+  let mut multipliers: Vec<(usize, usize)> = Vec::new();
 
   for line in utils::read_input_file_lines() {
     let (_, (card_id, _, winners, _, numbers)) = preceded(
@@ -33,11 +36,25 @@ fn part1() {
     let count = numbers.iter().filter(|n| winner_set.contains(n)).count();
     if count > 0 {
       let score = 2usize.pow((count - 1).try_into().expect("Invalid integer"));
-      total += score;
+      part1_total += score;
+    }
+
+    let multiplier = multipliers.iter().fold(0, |acc, pair| pair.1 + acc);
+    let card_count = 1 + multiplier; 
+    part2_total += card_count;
+
+    for count in multipliers.iter_mut() {
+      count.0 -= 1;
+    }
+    multipliers.retain(|&count| count.0 > 0);
+
+    if count > 0 {
+      multipliers.push((count, card_count));
     }
   }
 
-  println!("Part 1 {}", total);
+  println!("Part 1 {}", part1_total);
+  println!("Part 2 {}", part2_total);
 }
 
 fn parse_usize(input: &str) -> IResult<&str, usize> {
