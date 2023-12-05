@@ -3,7 +3,7 @@ use nom::{
   character::complete::{digit1, space1},
   combinator::map_res,
   multi::separated_list0,
-  sequence::{pair, preceded, tuple},
+  sequence::{preceded, tuple},
   IResult,
 };
 use std::cmp;
