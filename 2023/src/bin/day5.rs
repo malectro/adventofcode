@@ -7,6 +7,7 @@ use nom::{
   IResult,
 };
 use std::cmp;
+use std::mem;
 
 fn main() {
   part1();
@@ -31,12 +32,12 @@ fn part1() {
   for line in lines {
     if line == "" {
       next_seeds.append(&mut seeds);
-      seeds = next_seeds;
-      next_seeds = Vec::new();
+      mem::swap(&mut seeds, &mut next_seeds);
+      next_seeds.clear();
 
       next_ranges.append(&mut seed_ranges);
-      seed_ranges = next_ranges;
-      next_ranges = Vec::new();
+      mem::swap(&mut seed_ranges, &mut next_ranges);
+      next_ranges.clear();
 
     } else if let Some(range) =
       tuple((parse_usize, space1, parse_usize, space1, parse_usize))(&line).ok()
