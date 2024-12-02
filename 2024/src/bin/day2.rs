@@ -17,24 +17,25 @@ fn main() {
 fn part1() {
   let lines = utils::read_input_file_lines();
 
-  let mut count = 0;
+  let count: usize = lines
+    .map(|line| {
+      let (_, list) = separated_list0(space1, parse_int)(&line).expect("Invalid line");
 
-  for line in lines {
-    let (_, list) = separated_list0(space1, parse_int)(&line).expect("Invalid line");
+      let group = list
+        .iter()
+        .tuple_windows()
+        .map(|(a, b)| a - b)
+        .collect_vec();
 
-    let group = list
-      .iter()
-      .tuple_windows()
-      .map(|(a, b)| a - b)
-      .collect_vec();
+      let is_safe = group.iter().map(|diff| diff.signum()).all_equal()
+        && group
+          .iter()
+          .map(|diff| diff.abs())
+          .all(|diff| diff > 0 && diff < 4);
 
-    let is_safe = group.iter().map(|diff| diff.signum()).all_equal()
-      && group.iter().map(|diff| diff.abs()).all(|diff| diff > 0 && diff < 4);
-
-    if is_safe {
-      count += 1;
-    }
-  }
+      return if is_safe { 1 } else { 0 };
+    })
+    .sum();
 
   println!("Part 1 {}", count);
 }
