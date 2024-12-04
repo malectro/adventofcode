@@ -27,13 +27,74 @@ fn part1() {
     string.matches(target).count() + string.matches(&rtarget).count()
   ).sum::<usize>();
 
+  let row_len = strings.len();
   let col_len = strings[0].len();
   let chars: Vec<Vec<char>> = strings.iter().map(|string| string.chars().collect()).collect();
+
   let cols: Vec<String> = (0..col_len).map(|col| 
     (0..strings.len()).map(|row| chars[row][col]).collect()
   ).collect_vec();
 
   total += cols.iter().map(|string|
+    string.matches(target).count() + string.matches(&rtarget).count()
+  ).sum::<usize>();
+
+  let mut diags = Vec::new();
+  for start_row in 0..row_len {
+    let start_col = 0;
+
+    let mut string_down = String::new();
+    let mut string_up = String::new();
+
+    let mut row = start_row;
+    let mut col = start_col;
+
+    while row < row_len && col < col_len {
+      string_down.push(chars[row][col]);
+      row += 1;
+      col += 1;
+    }
+
+    diags.push(string_down);
+
+    while row != 0 && col != 0 {
+      row -= 1;
+      col -= 1;
+      string_up.push(chars[row][col]);
+    }
+
+    diags.push(string_up);
+  }
+
+  for start_col in 1..col_len {
+    let start_row = 0;
+
+    let mut string_down = String::new();
+    let mut string_up = String::new();
+
+    let mut row = start_row;
+    let mut col = start_col;
+
+    while row < row_len && col < col_len {
+      string_down.push(chars[row][col]);
+      row += 1;
+      col += 1;
+    }
+
+    diags.push(string_down);
+
+    while row != 0 && col != 0 {
+      row -= 1;
+      col -= 1;
+      string_up.push(chars[row][col]);
+    }
+
+    diags.push(string_up);
+  }
+
+  println!("diags {:?}", diags);
+
+  total += diags.iter().map(|string|
     string.matches(target).count() + string.matches(&rtarget).count()
   ).sum::<usize>();
 
